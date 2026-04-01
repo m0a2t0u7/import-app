@@ -32,6 +32,7 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
 .top-bar{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 14px;z-index:15;}
 .btn-back{background:none;border:none;color:var(--ts);font-size:1.1rem;cursor:pointer;padding:6px;font-family:inherit;}
 .btn-settings{background:none;border:none;color:var(--ts);font-size:1.1rem;cursor:pointer;padding:6px;font-family:inherit;}
+.wd{cursor:pointer;} .wd:active{opacity:.7;} .een{cursor:pointer;} .een:active{opacity:.7;} .eja{cursor:pointer;} .eja:active{opacity:.7;} .tap-hint{font-size:10px;color:rgba(255,255,255,.18);text-align:center;margin-top:4px;letter-spacing:.5px;}
 .deck-label{font-size:.7rem;color:var(--ts);letter-spacing:.5px;}
 
 /* anim area */
@@ -119,11 +120,12 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
     <div class="cnt">
       <div class="cn" id="cn">1 / 50</div>
       <div class="ct" id="ct">Phrasal Verb</div>
-      <div class="wd" id="wd">jump over</div>
+      <div class="wd" id="wd" onclick="replayWord()">jump over</div>
       <div class="mn hid" id="mn">〜を飛び越える</div>
       <div class="ex" id="ex">
-        <div class="een" id="een">Can you jump over that puddle?</div>
-        <div class="eja" id="eja">→ あの水たまり、飛び越えられる？</div>
+        <div class="een" id="een" onclick="replayEn()">Can you jump over that puddle?</div>
+        <div class="eja" id="eja" onclick="replayJa()">→ あの水たまり、飛び越えられる？</div>
+        <div class="tap-hint">タップで再生</div>
       </div>
     </div>
     <div class="ctrl">
@@ -173,6 +175,23 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
       <select id="voiceSelect" onchange="selectVoice(this.value)" style="width:100%;background:#2c2c2e;color:var(--tm);border:1px solid #3a3a3a;border-radius:10px;padding:8px 12px;font-size:.82rem;font-family:inherit;">
         <option value="">デフォルト</option>
       </select>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">和訳を読む（自動再生）</div>
+      <div class="btn-group" id="readJaBtns">
+        <button class="btn-opt active" onclick="setReadJa(true)">読む</button>
+        <button class="btn-opt" onclick="setReadJa(false)">読まない</button>
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">カード間の間隔</div>
+      <div class="btn-group" id="pauseBtns">
+        <button class="btn-opt" onclick="setPause(0.5)">短め</button>
+        <button class="btn-opt active" onclick="setPause(1.0)">普通</button>
+        <button class="btn-opt" onclick="setPause(1.8)">長め</button>
+      </div>
     </div>
 
     <button class="bm" onclick="closeSettings()" style="width:100%;margin-top:4px;">閉じる</button>
@@ -501,6 +520,205 @@ var W = [
   {id:'choose-irr',w:'choose',m:'chose / chosen',c:'不規則動詞',a:'anim-choose-between',en:'She chose to move abroad and never looked back.',ja:'→ 彼女は海外移住を選び、一度も後悔しなかった。'},
   {id:'run-irr',w:'run',m:'ran / run',c:'不規則動詞',a:'anim-run-away',en:'I ran into my old boss at the airport.',ja:'→ 空港で元上司とばったり会った。'},
   {id:'write-irr',w:'write',m:'wrote / written',c:'不規則動詞',a:'anim-spin',en:'He wrote the whole script in a weekend.',ja:'→ 彼は週末で台本を全部書き上げた。'},
+
+  // ── GET系 (30語) ──
+  {id:'get-up',w:'get up',m:'起きる / 起き上がる',c:'get系',a:'anim-stand-up',en:"Come on, get up — it's already 9!",ja:'→ ほら起きて、もう9時だよ！'},
+  {id:'get-out',w:'get out',m:'出る / 出ていく',c:'get系',a:'anim-escape',en:'She got out of the car and looked around.',ja:'→ 彼女は車を降りて周りを見回した。'},
+  {id:'get-off',w:'get off',m:'〜を降りる',c:'get系',a:'anim-walk-away',en:'Get off at the next stop.',ja:'→ 次の駅で降りて。'},
+  {id:'get-back',w:'get back',m:'戻る / 帰る',c:'get系',a:'anim-arrive-at',en:'What time did you get back last night?',ja:'→ 昨夜何時に帰ってきたの？'},
+  {id:'get-together',w:'get together',m:'集まる',c:'get系',a:'anim-gather',en:"Let's get together this weekend.",ja:'→ 今週末集まろうよ。'},
+  {id:'get-along',w:'get along',m:'うまくやっていく',c:'get系',a:'anim-follow',en:'I get along well with my neighbors.',ja:'→ 近所の人たちとはうまくやっている。'},
+  {id:'get-by',w:'get by',m:'なんとかやっていく',c:'get系',a:'anim-pass-through',en:'We can get by on one salary for now.',ja:'→ とりあえず1人の給料でなんとかなる。'},
+  {id:'get-down',w:'get down',m:'落ち込む / 降りる',c:'get系',a:'anim-go-down',en:"Don't let it get you down.",ja:'→ そんなことで落ち込まないで。'},
+  {id:'get-away',w:'get away',m:'逃げる / 離れる',c:'get系',a:'anim-run-away',en:'I just need to get away for a few days.',ja:'→ 数日間どこかに逃げたい。'},
+  {id:'get-ahead',w:'get ahead',m:'先へ進む / 出世する',c:'get系',a:'anim-overtake',en:'She works hard to get ahead.',ja:'→ 彼女は出世するために一生懸命働く。'},
+  {id:'get-around',w:'get around',m:'移動する / 回避する',c:'get系',a:'anim-walk-around',en:"How do you get around the city?",ja:'→ 市内はどうやって移動してるの？'},
+  {id:'get-into',w:'get into',m:'〜に入る / はまる',c:'get系',a:'anim-go-in',en:'I got into jogging lately.',ja:'→ 最近ジョギングにはまってる。'},
+  {id:'get-rid-of',w:'get rid of',m:'〜を捨てる / 取り除く',c:'get系',a:'anim-walk-away',en:"I'm getting rid of all the stuff I don't use.",ja:"→ 使わないものを全部捨ててる。"},
+  {id:'get-used-to',w:'get used to',m:'〜に慣れる',c:'get系',a:'anim-rely-on',en:'You will get used to the noise eventually.',ja:'→ そのうち騒音には慣れるよ。'},
+  {id:'get-lost',w:'get lost',m:'迷子になる',c:'get系',a:'anim-look-around',en:'We got lost on the way to the restaurant.',ja:'→ レストランへの途中で迷子になった。'},
+  {id:'get-ready',w:'get ready',m:'準備する',c:'get系',a:'anim-stand-up',en:'Get ready — the taxi is here.',ja:'→ 準備して、タクシー来たよ。'},
+  {id:'get-dressed',w:'get dressed',m:'服を着る',c:'get系',a:'anim-put-on',en:'Get dressed quickly or we will be late.',ja:'→ 早く着替えて、遅れちゃう。'},
+  {id:'get-married',w:'get married',m:'結婚する',c:'get系',a:'anim-gather',en:"They're getting married next spring.",ja:'→ 彼らは来年の春に結婚する。'},
+  {id:'get-hurt',w:'get hurt',m:'怪我をする',c:'get系',a:'anim-hit',en:'Be careful not to get hurt.',ja:'→ 怪我しないように気をつけて。'},
+  {id:'get-better',w:'get better',m:'よくなる / 回復する',c:'get系',a:'anim-grow-up',en:'You will get better soon — just rest.',ja:'→ すぐよくなるよ、とにかく休んで。'},
+  {id:'get-worse',w:'get worse',m:'悪化する',c:'get系',a:'anim-go-down',en:'The traffic gets worse every year.',ja:'→ 毎年渋滞がひどくなってる。'},
+  {id:'get-excited',w:'get excited',m:'興奮する / わくわくする',c:'get系',a:'anim-bounce',en:'The kids got excited when they saw the ocean.',ja:'→ 子どもたちは海を見て大興奮した。'},
+  {id:'get-tired',w:'get tired',m:'疲れる',c:'get系',a:'anim-sink',en:'I get tired easily after lunch.',ja:'→ 昼食後は疲れやすくなる。'},
+  {id:'get-bored',w:'get bored',m:'退屈する',c:'get系',a:'anim-float',en:'He gets bored quickly without something to do.',ja:'→ 何もないとすぐ退屈してしまう。'},
+  {id:'get-angry',w:'get angry',m:'怒る',c:'get系',a:'anim-hit',en:"Don't get angry — it's not worth it.",ja:"→ 怒らないで、そんな価値ないから。"},
+  {id:'get-confused',w:'get confused',m:'混乱する',c:'get系',a:'anim-zigzag',en:'I always get confused by these instructions.',ja:'→ この説明書、いつも混乱する。'},
+  {id:'get-started',w:'get started',m:'始める / 取りかかる',c:'get系',a:'anim-jump-over',en:"Let's get started before it gets dark.",ja:'→ 暗くなる前に始めよう。'},
+  {id:'get-promoted',w:'get promoted',m:'昇進する',c:'get系',a:'anim-rise',en:'She got promoted to manager last month.',ja:'→ 先月マネージャーに昇進した。'},
+  {id:'get-fired',w:'get fired',m:'解雇される',c:'get系',a:'anim-walk-away',en:'He got fired for being late too many times.',ja:'→ 遅刻が多すぎてクビになった。'},
+  {id:'get-paid',w:'get paid',m:'給料をもらう',c:'get系',a:'anim-arrive-at',en:'We get paid on the last day of the month.',ja:'→ 月末に給料が入る。'},
+  // ── TAKE系 (25語) ──
+  {id:'take-off',w:'take off',m:'離陸する / 脱ぐ',c:'take系',a:'anim-fly-over',en:'The plane takes off in thirty minutes.',ja:'→ 飛行機はあと30分で離陸する。'},
+  {id:'take-out',w:'take out',m:'取り出す / テイクアウト',c:'take系',a:'anim-emerge',en:'Can I take out some cash here?',ja:'→ ここで現金を引き出せる？'},
+  {id:'take-in',w:'take in',m:'取り込む / 理解する',c:'take系',a:'anim-in',en:'It was a lot to take in all at once.',ja:'→ 一度に理解するには情報が多すぎた。'},
+  {id:'take-back',w:'take back',m:'返す / 撤回する',c:'take系',a:'anim-retreat',en:'Can I take back what I said earlier?',ja:'→ さっき言ったこと、撤回してもいい？'},
+  {id:'take-on',w:'take on',m:'引き受ける / 担う',c:'take系',a:'anim-approach',en:"I've taken on too much work this month.",ja:'→ 今月は仕事を引き受けすぎた。'},
+  {id:'take-over',w:'take over',m:'〜を引き継ぐ / 乗っ取る',c:'take系',a:'anim-overtake',en:'She took over the project from him.',ja:'→ 彼女が彼からプロジェクトを引き継いだ。'},
+  {id:'take-up',w:'take up',m:'始める / 場所をとる',c:'take系',a:'anim-climb',en:'I just took up tennis.',ja:'→ 最近テニスを始めた。'},
+  {id:'take-down',w:'take down',m:'メモをとる / 取り下ろす',c:'take系',a:'anim-go-down',en:'Let me take down your number.',ja:'→ 番号メモしておくね。'},
+  {id:'take-away',w:'take away',m:'持ち去る / 奪う',c:'take系',a:'anim-walk-away',en:'What did you take away from the meeting?',ja:'→ 会議から何を得た？'},
+  {id:'take-apart',w:'take apart',m:'分解する',c:'take系',a:'anim-break-down',en:'He took the clock apart to fix it.',ja:'→ 彼は時計を直そうと分解した。'},
+  {id:'take-care-of',w:'take care of',m:'〜の世話をする',c:'take系',a:'anim-surround',en:'Can you take care of my cat this weekend?',ja:'→ 今週末ネコの世話できる？'},
+  {id:'take-a-break',w:'take a break',m:'休憩する',c:'take系',a:'anim-sit-down',en:'You should take a break — you look exhausted.',ja:'→ 休憩して、疲れてるみたいだよ。'},
+  {id:'take-a-walk',w:'take a walk',m:'散歩する',c:'take系',a:'anim-walk-around',en:'I take a walk every morning before breakfast.',ja:'→ 毎朝朝食前に散歩する。'},
+  {id:'take-a-look',w:'take a look',m:'ちょっと見る',c:'take系',a:'anim-look-around',en:'Can you take a look at this for me?',ja:'→ これ、ちょっと見てもらえる？'},
+  {id:'take-turns',w:'take turns',m:'交代でやる',c:'take系',a:'anim-choose-between',en:'We take turns doing the dishes.',ja:'→ 食器洗いは交代でやっている。'},
+  {id:'take-place',w:'take place',m:'起こる / 行われる',c:'take系',a:'anim-arrive-at',en:'The ceremony takes place on Saturday.',ja:'→ 式典は土曜日に行われる。'},
+  {id:'take-part',w:'take part',m:'参加する',c:'take系',a:'anim-gather',en:'Over two hundred people took part in the event.',ja:'→ 200人以上がイベントに参加した。'},
+  {id:'take-a-photo',w:'take a photo',m:'写真を撮る',c:'take系',a:'anim-aim-at',en:'Mind if I take a photo here?',ja:'→ ここで写真撮っていい？'},
+  {id:'take-a-seat',w:'take a seat',m:'座る',c:'take系',a:'anim-sit-down',en:'Please take a seat — she will be right with you.',ja:'→ どうぞお座りください、すぐ参ります。'},
+  {id:'take-action',w:'take action',m:'行動を起こす',c:'take系',a:'anim-jump-over',en:"It's time to take action instead of just talking.",ja:"→ 話すだけじゃなく行動する時だ。"},
+  {id:'take-a-risk',w:'take a risk',m:'リスクを冒す',c:'take系',a:'anim-dive',en:'Sometimes you have to take a risk to move forward.',ja:'→ 前に進むにはリスクを冒すことも必要だ。'},
+  {id:'take-notes',w:'take notes',m:'メモをとる',c:'take系',a:'anim-aim-at',en:'Did you take notes in the meeting?',ja:'→ 会議でメモとった？'},
+  {id:'take-time',w:'take time',m:'時間がかかる',c:'take系',a:'anim-float',en:'Learning a language takes time.',ja:'→ 語学の習得には時間がかかる。'},
+  {id:'take-responsibility',w:'take responsibility',m:'責任をとる',c:'take系',a:'anim-stand-up',en:'He took responsibility for the mistake.',ja:'→ 彼はミスの責任をとった。'},
+  {id:'take-advantage',w:'take advantage of',m:'〜を活用する',c:'take系',a:'anim-overtake',en:'Take advantage of the sale while you can.',ja:'→ セールの間に活用しないと。'},
+  // ── MAKE系 (20語) ──
+  {id:'make-up',w:'make up',m:'仲直りする / 化粧する',c:'make系',a:'anim-gather',en:"They argued but made up the next day.",ja:'→ 口論したけど翌日仲直りした。'},
+  {id:'make-sense',w:'make sense',m:'意味をなす / 理解できる',c:'make系',a:'anim-expand',en:"That makes sense — I get it now.",ja:'→ なるほど、わかった。'},
+  {id:'make-friends',w:'make friends',m:'友達を作る',c:'make系',a:'anim-bump-into',en:'She made friends easily at the new school.',ja:'→ 新しい学校ですぐ友達ができた。'},
+  {id:'make-a-decision',w:'make a decision',m:'決断する',c:'make系',a:'anim-choose-between',en:'I need more time to make a decision.',ja:'→ 決断するにはもう少し時間が必要だ。'},
+  {id:'make-progress',w:'make progress',m:'進歩する / 前進する',c:'make系',a:'anim-overtake',en:"You're making great progress — keep it up.",ja:"→ すごく進歩してる、そのまま続けて。"},
+  {id:'make-a-mistake',w:'make a mistake',m:'ミスをする',c:'make系',a:'anim-hit',en:'Everyone makes mistakes — that is how we learn.',ja:'→ 誰でもミスする、それが学びになる。'},
+  {id:'make-an-effort',w:'make an effort',m:'努力する',c:'make系',a:'anim-climb',en:"She made a real effort to learn Japanese.",ja:'→ 彼女は日本語を学ぼうと本当に頑張った。'},
+  {id:'make-a-plan',w:'make a plan',m:'計画を立てる',c:'make系',a:'anim-aim-at',en:"Let's make a plan for the weekend.",ja:'→ 週末の計画を立てよう。'},
+  {id:'make-sure',w:'make sure',m:'確認する',c:'make系',a:'anim-look-around',en:'Make sure you lock the door when you leave.',ja:'→ 出るときにドアに鍵かけたか確認してね。'},
+  {id:'make-money',w:'make money',m:'お金を稼ぐ',c:'make系',a:'anim-grow-up',en:'She makes money from her online shop.',ja:'→ ネットショップで稼いでいる。'},
+  {id:'make-a-difference',w:'make a difference',m:'変化をもたらす',c:'make系',a:'anim-expand',en:'Even small actions can make a difference.',ja:'→ 小さな行動でも違いを生み出せる。'},
+  {id:'make-it',w:'make it',m:'成功する / 間に合う',c:'make系',a:'anim-arrive-at',en:"We made it just before the gates closed.",ja:'→ ゲートが閉まる直前になんとか間に合った。'},
+  {id:'make-up-for',w:'make up for',m:'〜を埋め合わせる',c:'make系',a:'anim-approach',en:"I'll make up for the missed class next week.",ja:"→ 来週、休んだ分を取り返す。"},
+  {id:'make-do',w:'make do',m:'間に合わせる / やりくりする',c:'make系',a:'anim-rely-on',en:"We'll have to make do with what we have.",ja:"→ あるもので何とかしなきゃ。"},
+  {id:'make-a-call',w:'make a call',m:'電話をかける',c:'make系',a:'anim-point-at',en:'I need to make a quick call — give me a sec.',ja:'→ ちょっと電話かけたい、少し待って。'},
+  {id:'make-room',w:'make room',m:'場所を空ける',c:'make系',a:'anim-walk-away',en:'Can you make room for one more person?',ja:'→ もう一人分スペース空けられる？'},
+  {id:'make-a-point',w:'make a point',m:'要点を言う / 指摘する',c:'make系',a:'anim-point-at',en:"She made a good point about the timing.",ja:'→ タイミングについていいことを指摘した。'},
+  {id:'make-fun-of',w:'make fun of',m:'〜をからかう',c:'make系',a:'anim-look-at',en:"Don't make fun of people for their accent.",ja:"→ アクセントのことでからかうのはよくない。"},
+  {id:'make-believe',w:'make believe',m:'〜のふりをする',c:'make系',a:'anim-spin',en:'Kids make believe all the time.',ja:'→ 子どもはしょっちゅうごっこ遊びをする。'},
+  {id:'make-a-reservation',w:'make a reservation',m:'予約する',c:'make系',a:'anim-aim-at',en:'Did you make a reservation for dinner?',ja:'→ 夕食の予約した？'},
+  // ── 中学英語 感情・状態動詞 (25語) ──
+  {id:'love',w:'love',m:'〜を愛する / 大好き',c:'中学動詞',a:'anim-approach',en:'I love lazy Sunday mornings.',ja:'→ のんびりした日曜の朝が大好き。'},
+  {id:'like',w:'like',m:'〜が好き',c:'中学動詞',a:'anim-aim-at',en:'Do you like spicy food?',ja:'→ 辛い食べ物は好き？'},
+  {id:'enjoy',w:'enjoy',m:'〜を楽しむ',c:'中学動詞',a:'anim-bounce',en:'I really enjoyed the concert last night.',ja:'→ 昨夜のコンサート、すごく楽しかった。'},
+  {id:'prefer',w:'prefer',m:'〜の方が好き',c:'中学動詞',a:'anim-choose-between',en:'I prefer tea over coffee in the morning.',ja:'→ 朝はコーヒーよりお茶の方が好き。'},
+  {id:'hate',w:'hate',m:'〜が嫌い',c:'中学動詞',a:'anim-run-away',en:'I hate waiting in long lines.',ja:'→ 長い行列で待つのが嫌い。'},
+  {id:'fear',w:'fear',m:'〜を恐れる',c:'中学動詞',a:'anim-retreat',en:'He fears nothing.',ja:'→ 彼は何も恐れない。'},
+  {id:'worry',w:'worry',m:'心配する',c:'中学動詞',a:'anim-look-around',en:"Don't worry — everything will be okay.",ja:"→ 心配しないで、きっとうまくいく。"},
+  {id:'hope',w:'hope',m:'〜を望む / 期待する',c:'中学動詞',a:'anim-float',en:'I hope the weather clears up.',ja:'→ 天気が回復するといいな。'},
+  {id:'wish',w:'wish',m:'〜を望む / 願う',c:'中学動詞',a:'anim-orbit',en:'I wish I had more free time.',ja:'→ もっと自由な時間があればいいのに。'},
+  {id:'wonder',w:'wonder',m:'〜かなと思う',c:'中学動詞',a:'anim-look-around',en:'I wonder if she got home safely.',ja:'→ 彼女、無事に帰れたかな。'},
+  {id:'miss',w:'miss',m:'〜が恋しい / 乗り遅れる',c:'中学動詞',a:'anim-retreat',en:'I really miss my hometown.',ja:'→ 地元がすごく恋しい。'},
+  {id:'mind',w:'mind',m:'気にする / 嫌がる',c:'中学動詞',a:'anim-block',en:"I don't mind waiting.",ja:"→ 待つのは全然大丈夫。"},
+  {id:'need',w:'need',m:'〜が必要だ',c:'中学動詞',a:'anim-pull',en:'I need a vacation.',ja:'→ 休暇が必要だ。'},
+  {id:'want',w:'want',m:'〜が欲しい / したい',c:'中学動詞',a:'anim-pull',en:'Do you want anything from the store?',ja:'→ お店で何か欲しいものある？'},
+  {id:'seem',w:'seem',m:'〜のようだ',c:'中学動詞',a:'anim-expand',en:'You seem tired today.',ja:'→ 今日疲れてるみたいだね。'},
+  {id:'appear',w:'appear',m:'現れる / 〜のように見える',c:'中学動詞',a:'anim-emerge',en:'He appears to be busy right now.',ja:'→ 彼は今忙しそうに見える。'},
+  {id:'agree',w:'agree',m:'同意する',c:'中学動詞',a:'anim-gather',en:'I totally agree with you.',ja:'→ 完全に同意するよ。'},
+  {id:'disagree',w:'disagree',m:'反対する',c:'中学動詞',a:'anim-block',en:'I disagree — I think it could work.',ja:'→ 反対、これはうまくいくと思う。'},
+  {id:'believe',w:'believe',m:'〜を信じる',c:'中学動詞',a:'anim-approach',en:"I believe you — you have no reason to lie.",ja:"→ 信じるよ、嘘をつく理由がないもん。"},
+  {id:'forget',w:'forget',m:'忘れる',c:'中学動詞',a:'anim-walk-away',en:'I keep forgetting to call him back.',ja:'→ 折り返し電話するのをいつも忘れる。'},
+  {id:'remember',w:'remember',m:'覚えている / 思い出す',c:'中学動詞',a:'anim-look-around',en:'Do you remember where we parked?',ja:'→ どこに停めたか覚えてる？'},
+  {id:'understand',w:'understand',m:'〜を理解する',c:'中学動詞',a:'anim-expand',en:'I completely understand how you feel.',ja:'→ あなたの気持ち、すごくわかる。'},
+  {id:'know',w:'know',m:'知っている',c:'中学動詞',a:'anim-aim-at',en:'Do you know this area well?',ja:'→ このあたり、よく知ってる？'},
+  {id:'think',w:'think',m:'思う / 考える',c:'中学動詞',a:'anim-spin',en:'I think we should leave early.',ja:'→ 早めに出発した方がいいと思う。'},
+  {id:'feel',w:'feel',m:'感じる',c:'中学動詞',a:'anim-float',en:"I feel much better after a good sleep.",ja:"→ よく眠れてだいぶ楽になった。"},
+  // ── 中学英語 行動・移動動詞 (25語) ──
+  {id:'walk',w:'walk',m:'歩く',c:'中学動詞',a:'anim-walk-around',en:'I walk to work every day.',ja:'→ 毎日歩いて通勤してる。'},
+  {id:'run2',w:'run',m:'走る',c:'中学動詞',a:'anim-run-away',en:'I run three kilometers every morning.',ja:'→ 毎朝3キロ走ってる。'},
+  {id:'jump2',w:'jump',m:'跳ぶ',c:'中学動詞',a:'anim-jump-over',en:'The cat jumped onto the table.',ja:'→ 猫がテーブルに飛び乗った。'},
+  {id:'swim',w:'swim',m:'泳ぐ',c:'中学動詞',a:'anim-cross',en:'She swam across the lake.',ja:'→ 彼女は湖を泳いで渡った。'},
+  {id:'fly2',w:'fly',m:'飛ぶ',c:'中学動詞',a:'anim-fly-over',en:'We flew over the Alps.',ja:'→ アルプスの上を飛んだ。'},
+  {id:'drive',w:'drive',m:'運転する',c:'中学動詞',a:'anim-overtake',en:"I'll drive — I haven't had a drink.",ja:"→ 私が運転する、飲んでないから。"},
+  {id:'ride',w:'ride',m:'〜に乗る',c:'中学動詞',a:'anim-get-on',en:'I ride my bike to the station.',ja:'→ 自転車で駅まで行く。'},
+  {id:'sit2',w:'sit',m:'座る',c:'中学動詞',a:'anim-sit-down',en:'Come and sit with us.',ja:'→ こっちに来て座って。'},
+  {id:'stand2',w:'stand',m:'立つ',c:'中学動詞',a:'anim-stand-up',en:'I was standing in line for an hour.',ja:'→ 1時間ずっと列に並んで立ってた。'},
+  {id:'lie-down',w:'lie down',m:'横になる',c:'中学動詞',a:'anim-sink',en:'I need to lie down for a bit.',ja:'→ 少し横になる必要がある。'},
+  {id:'carry',w:'carry',m:'〜を運ぶ',c:'中学動詞',a:'anim-follow',en:"Here, let me carry that for you.",ja:"→ ほら、持ってあげる。"},
+  {id:'lift',w:'lift',m:'〜を持ち上げる',c:'中学動詞',a:'anim-rise',en:"Don't lift anything too heavy.",ja:"→ 重いものは持ち上げないで。"},
+  {id:'drop2',w:'drop',m:'〜を落とす',c:'中学動詞',a:'anim-fall-down',en:'I dropped my phone and cracked the screen.',ja:'→ スマホを落として画面が割れた。'},
+  {id:'open2',w:'open',m:'開ける / 開く',c:'中学動詞',a:'anim-expand',en:"Open the window — it's stuffy in here.",ja:"→ 窓開けて、空気がよどんでる。"},
+  {id:'close2',w:'close',m:'閉める',c:'中学動詞',a:'anim-block',en:'Close the door quietly, please.',ja:'→ 静かにドアを閉めて。'},
+  {id:'enter2',w:'enter',m:'入る',c:'中学動詞',a:'anim-go-in',en:'Please knock before you enter.',ja:'→ 入る前にノックしてください。'},
+  {id:'return2',w:'return',m:'戻る / 返す',c:'中学動詞',a:'anim-arrive-at',en:'I need to return this book to the library.',ja:'→ この本、図書館に返さないといけない。'},
+  {id:'turn2',w:'turn',m:'曲がる / 回る',c:'中学動詞',a:'anim-turn-around',en:'Turn left at the traffic lights.',ja:'→ 信号を左に曲がって。'},
+  {id:'stop2',w:'stop',m:'止まる / やめる',c:'中学動詞',a:'anim-block',en:"Stop — the light is red.",ja:"→ 止まって、赤信号だ。"},
+  {id:'start2',w:'start',m:'始まる / 始める',c:'中学動詞',a:'anim-jump-over',en:"The movie starts in ten minutes.",ja:"→ 映画は10分後に始まる。"},
+  {id:'continue2',w:'continue',m:'続ける / 続く',c:'中学動詞',a:'anim-follow',en:'Please continue — I am listening.',ja:'→ 続けて、聞いてるよ。'},
+  {id:'visit',w:'visit',m:'訪問する',c:'中学動詞',a:'anim-arrive-at',en:'We visited my grandparents last weekend.',ja:'→ 先週末、祖父母の家に行った。'},
+  {id:'wait',w:'wait',m:'待つ',c:'中学動詞',a:'anim-float',en:'Wait here — I will be right back.',ja:'→ ここで待って、すぐ戻る。'},
+  {id:'climb2',w:'climb',m:'登る',c:'中学動詞',a:'anim-climb',en:'She climbed the ladder to fix the light.',ja:'→ 彼女は電球を直そうとはしごを登った。'},
+  {id:'fall2',w:'fall',m:'落ちる / 転ぶ',c:'中学動詞',a:'anim-fall-down',en:'Be careful not to fall on the wet floor.',ja:'→ 濡れた床で転ばないように気をつけて。'},
+  // ── 中学英語 コミュニケーション動詞 (20語) ──
+  {id:'say2',w:'say',m:'言う',c:'中学動詞',a:'anim-point-at',en:'What did she say?',ja:'→ 彼女、何て言った？'},
+  {id:'speak2',w:'speak',m:'話す / 話せる',c:'中学動詞',a:'anim-look-at',en:'Do you speak any other languages?',ja:'→ 他に話せる言語はある？'},
+  {id:'talk2',w:'talk',m:'話す / 話し合う',c:'中学動詞',a:'anim-bump-into',en:"Can we talk for a moment?",ja:"→ ちょっと話せる？"},
+  {id:'ask2',w:'ask',m:'尋ねる / 頼む',c:'中学動詞',a:'anim-approach',en:"Don't be afraid to ask for help.",ja:"→ 助けを求めることを恐れないで。"},
+  {id:'answer2',w:'answer',m:'答える / 応答する',c:'中学動詞',a:'anim-point-at',en:"She answered every question correctly.",ja:'→ 彼女は全問正解した。'},
+  {id:'call2',w:'call',m:'電話する / 呼ぶ',c:'中学動詞',a:'anim-aim-at',en:'Call me when you get home.',ja:'→ 家に着いたら電話して。'},
+  {id:'listen2',w:'listen',m:'聞く / 耳を傾ける',c:'中学動詞',a:'anim-look-at',en:'Listen carefully — this is important.',ja:'→ よく聞いて、大事なことだから。'},
+  {id:'hear2',w:'hear',m:'聞こえる',c:'中学動詞',a:'anim-look-around',en:'Did you hear that noise?',ja:'→ 今の音、聞こえた？'},
+  {id:'read2',w:'read',m:'読む',c:'中学動詞',a:'anim-look-at',en:'I read before bed every night.',ja:'→ 毎晩寝る前に読書する。'},
+  {id:'write2',w:'write',m:'書く',c:'中学動詞',a:'anim-aim-at',en:'Write your name at the top of the page.',ja:'→ ページの上に名前を書いて。'},
+  {id:'explain2',w:'explain',m:'〜を説明する',c:'中学動詞',a:'anim-expand',en:'Can you explain that again more slowly?',ja:'→ もう少しゆっくり説明してもらえる？'},
+  {id:'introduce2',w:'introduce',m:'〜を紹介する',c:'中学動詞',a:'anim-bump-into',en:'Let me introduce you to my colleague.',ja:'→ 同僚を紹介するね。'},
+  {id:'invite2',w:'invite',m:'〜を招待する',c:'中学動詞',a:'anim-pull',en:'They invited us to their wedding.',ja:'→ 彼らの結婚式に招待された。'},
+  {id:'refuse2',w:'refuse',m:'断る',c:'中学動詞',a:'anim-block',en:'She politely refused the offer.',ja:'→ 彼女は丁寧にその申し出を断った。'},
+  {id:'accept2',w:'accept',m:'〜を受け入れる',c:'中学動詞',a:'anim-in',en:'I accepted the job offer.',ja:'→ 内定を受け入れた。'},
+  {id:'promise2',w:'promise',m:'〜を約束する',c:'中学動詞',a:'anim-aim-at',en:'Promise me you will be careful.',ja:'→ 気をつけるって約束して。'},
+  {id:'apologize2',w:'apologize',m:'謝る',c:'中学動詞',a:'anim-retreat',en:'He apologized for being late.',ja:'→ 彼は遅れたことを謝った。'},
+  {id:'suggest2',w:'suggest',m:'〜を提案する',c:'中学動詞',a:'anim-point-at',en:'I suggest we leave a bit earlier.',ja:'→ 少し早めに出発することを提案する。'},
+  {id:'recommend2',w:'recommend',m:'〜をすすめる',c:'中学動詞',a:'anim-aim-at',en:'Can you recommend a good restaurant near here?',ja:'→ このあたりでおすすめのレストランある？'},
+  {id:'warn2',w:'warn',m:'〜に警告する',c:'中学動詞',a:'anim-block',en:'I warned you it would be cold.',ja:'→ 寒くなるって言ったじゃない。'},
+  // ── 中学英語 生活・日課動詞 (25語) ──
+  {id:'wake2',w:'wake up',m:'目が覚める',c:'中学動詞',a:'anim-stand-up',en:'I wake up naturally around seven.',ja:'→ 自然に7時頃目が覚める。'},
+  {id:'sleep2',w:'sleep',m:'眠る',c:'中学動詞',a:'anim-sink',en:'I slept for ten hours and still feel tired.',ja:'→ 10時間も寝たのにまだ疲れてる。'},
+  {id:'eat2',w:'eat',m:'食べる',c:'中学動詞',a:'anim-in',en:'Have you eaten yet?',ja:'→ もう食べた？'},
+  {id:'drink2',w:'drink',m:'飲む',c:'中学動詞',a:'anim-go-down',en:"Drink more water — you don't drink enough.",ja:"→ もっと水飲んで、全然足りてないよ。"},
+  {id:'cook2',w:'cook',m:'料理する',c:'中学動詞',a:'anim-expand',en:'She cooks dinner from scratch every night.',ja:'→ 彼女は毎晩夕食を一から作る。'},
+  {id:'clean2',w:'clean',m:'掃除する',c:'中学動詞',a:'anim-walk-away',en:'I need to clean the apartment this weekend.',ja:'→ 今週末、部屋を掃除しなきゃ。'},
+  {id:'wash2',w:'wash',m:'洗う',c:'中学動詞',a:'anim-through',en:"Wash your hands before you eat.",ja:"→ 食べる前に手を洗って。"},
+  {id:'buy2',w:'buy',m:'買う',c:'中学動詞',a:'anim-arrive-at',en:'I bought this on sale.',ja:'→ これセールで買った。'},
+  {id:'sell2',w:'sell',m:'売る',c:'中学動詞',a:'anim-walk-away',en:'She sold her old bike online.',ja:'→ 彼女は古い自転車をネットで売った。'},
+  {id:'spend2',w:'spend',m:'〜を過ごす / 使う',c:'中学動詞',a:'anim-walk-away',en:'How do you like to spend your weekends?',ja:'→ 週末はどう過ごすのが好き？'},
+  {id:'pay2',w:'pay',m:'払う',c:'中学動詞',a:'anim-approach',en:'I will pay you back tomorrow.',ja:'→ 明日返すね。'},
+  {id:'save2',w:'save',m:'節約する / 貯める',c:'中学動詞',a:'anim-in',en:"I'm saving up for a new camera.",ja:"→ 新しいカメラを買うために貯金してる。"},
+  {id:'borrow',w:'borrow',m:'〜を借りる',c:'中学動詞',a:'anim-pull',en:'Can I borrow your charger for a bit?',ja:'→ ちょっと充電器借りていい？'},
+  {id:'lend',w:'lend',m:'〜を貸す',c:'中学動詞',a:'anim-throw',en:"I'll lend you my umbrella.",ja:"→ 傘貸してあげる。"},
+  {id:'use2',w:'use',m:'〜を使う',c:'中学動詞',a:'anim-aim-at',en:'Can I use your phone for a second?',ja:'→ ちょっと電話使っていい？'},
+  {id:'try2',w:'try',m:'試す / 頑張る',c:'中学動詞',a:'anim-jump-over',en:"Just try it — you might like it.",ja:"→ とりあえず試してみて、気に入るかも。"},
+  {id:'check2',w:'check',m:'確認する',c:'中学動詞',a:'anim-look-at',en:'Check your phone — I sent you a message.',ja:'→ スマホ確認して、メッセージ送ったよ。'},
+  {id:'look-for',w:'look for',m:'〜を探す',c:'中学動詞',a:'anim-look-around',en:"I'm looking for my keys — have you seen them?",ja:"→ 鍵を探してるんだけど、見た？"},
+  {id:'find2',w:'find',m:'〜を見つける',c:'中学動詞',a:'anim-emerge',en:'I found the perfect cafe near the office.',ja:'→ 会社近くに最高のカフェを見つけた。'},
+  {id:'lose2',w:'lose',m:'失くす / 負ける',c:'中学動詞',a:'anim-walk-away',en:"I've lost my wallet again.",ja:"→ またお財布なくした。"},
+  {id:'keep2',w:'keep',m:'〜を保つ / 続ける',c:'中学動詞',a:'anim-follow',en:'Keep the change.',ja:'→ おつりはいらないよ。'},
+  {id:'show2',w:'show',m:'見せる / 案内する',c:'中学動詞',a:'anim-point-at',en:'Show me how you do it.',ja:'→ どうやってやるか見せて。'},
+  {id:'send2',w:'send',m:'送る',c:'中学動詞',a:'anim-throw',en:"I'll send you the details later.",ja:"→ 詳細は後で送るね。"},
+  {id:'receive2',w:'receive',m:'受け取る',c:'中学動詞',a:'anim-in',en:'Did you receive my email?',ja:'→ メール受け取った？'},
+  {id:'give2',w:'give',m:'あげる / 与える',c:'中学動詞',a:'anim-throw',en:'Give it a try.',ja:'→ やってみなよ。'},
+  // ── 中学英語 仕事・学習動詞 (20語) ──
+  {id:'work2',w:'work',m:'働く / 機能する',c:'中学動詞',a:'anim-climb',en:'She works from home three days a week.',ja:'→ 彼女は週3日在宅で働く。'},
+  {id:'study2',w:'study',m:'勉強する',c:'中学動詞',a:'anim-look-at',en:'I study English for an hour every day.',ja:'→ 毎日1時間英語を勉強している。'},
+  {id:'learn2',w:'learn',m:'〜を学ぶ / 覚える',c:'中学動詞',a:'anim-grow-up',en:"It's never too late to learn something new.",ja:"→ 新しいことを学ぶのに遅すぎることはない。"},
+  {id:'teach2',w:'teach',m:'〜を教える',c:'中学動詞',a:'anim-point-at',en:'My dad taught me how to cook.',ja:'→ 父が料理の仕方を教えてくれた。'},
+  {id:'help2',w:'help',m:'助ける / 手伝う',c:'中学動詞',a:'anim-approach',en:'Can I help you with that?',ja:'→ それ手伝おうか？'},
+  {id:'plan2',w:'plan',m:'計画する',c:'中学動詞',a:'anim-aim-at',en:"I'm planning a trip to Europe next year.",ja:"→ 来年ヨーロッパ旅行を計画中。"},
+  {id:'decide2',w:'decide',m:'決める',c:'中学動詞',a:'anim-choose-between',en:"I've decided to change jobs.",ja:"→ 転職することにした。"},
+  {id:'solve',w:'solve',m:'〜を解決する',c:'中学動詞',a:'anim-break-free',en:"Let's solve one problem at a time.",ja:"→ 一つずつ問題を解決していこう。"},
+  {id:'create2',w:'create',m:'〜を作る / 生み出す',c:'中学動詞',a:'anim-expand',en:"She's creating a new brand from scratch.",ja:"→ 彼女は一から新しいブランドを作っている。"},
+  {id:'build2',w:'build',m:'建てる / 作り上げる',c:'中学動詞',a:'anim-grow-up',en:"They're building a new park nearby.",ja:"→ 近くに新しい公園を作っている。"},
+  {id:'improve2',w:'improve',m:'〜を改善する / 上達する',c:'中学動詞',a:'anim-rise',en:'Your English has improved so much.',ja:'→ 英語がすごく上達したね。'},
+  {id:'practice2',w:'practice',m:'練習する',c:'中学動詞',a:'anim-bounce',en:'I practice speaking every morning.',ja:'→ 毎朝スピーキングの練習をしている。'},
+  {id:'prepare2',w:'prepare',m:'〜を準備する',c:'中学動詞',a:'anim-stand-up',en:"I'm preparing for a big presentation.",ja:"→ 大きなプレゼンの準備をしている。"},
+  {id:'finish2',w:'finish',m:'終える / 終わる',c:'中学動詞',a:'anim-arrive-at',en:"I finally finished the report.",ja:"→ ついにレポートを書き終えた。"},
+  {id:'fail2',w:'fail',m:'失敗する',c:'中学動詞',a:'anim-fall-down',en:"It's okay to fail — just don't give up.",ja:"→ 失敗してもいい、ただあきらめないで。"},
+  {id:'succeed',w:'succeed',m:'成功する',c:'中学動詞',a:'anim-rise',en:'If you keep trying, you will succeed.',ja:'→ 挑戦し続けると成功するよ。'},
+  {id:'achieve',w:'achieve',m:'〜を達成する',c:'中学動詞',a:'anim-arrive-at',en:'She achieved her goal after years of hard work.',ja:'→ 彼女は何年もの努力の末に目標を達成した。'},
+  {id:'manage',w:'manage',m:'なんとかやり遂げる',c:'中学動詞',a:'anim-get-through',en:"I don't know how, but we managed it.",ja:"→ どうやったかわからないけど、なんとかなった。"},
+  {id:'consider',w:'consider',m:'〜を考慮する',c:'中学動詞',a:'anim-look-around',en:'Have you considered moving abroad?',ja:'→ 海外移住を考えたことある？'},
+  {id:'include',w:'include',m:'〜を含む',c:'中学動詞',a:'anim-gather',en:'The price includes breakfast.',ja:'→ 料金には朝食が含まれている。'},
 ];
 
 // word lookup by id
@@ -520,36 +738,46 @@ var DECKS = [
   {id:'on',name:'〜on系',emoji:'🎯',desc:'get / put / step / rely on',ids:['on','get-on','put-on','step-on','rely-on']},
   {id:'at',name:'〜at系',emoji:'🏁',desc:'arrive / get to / aim at...',ids:['at','arrive-at','get-to','reach','come-to','aim-at','look-at','point-at']},
   {id:'action',name:'アクション動詞',emoji:'⚡',desc:'bounce / spin / chase...',ids:['bounce','spin','float','expand','orbit','zigzag','climb','follow','overtake','throw','roll','scatter','gather','emerge','sink','peek','break-free','cross','block','swing','surround','chase','pull','push','weave','approach','retreat','hit','strike','bump-into','walk-around','look-around','turn-around','travel-around']},
-  {id:'irregular',name:'不規則動詞',emoji:'📝',desc:'go/went/gone など20語',ids:['go-irr','come-irr','see-irr','get-irr','give-irr','take-irr','make-irr','know-irr','think-irr','say-irr','tell-irr','find-irr','feel-irr','break-irr','bring-irr','buy-irr','catch-irr','choose-irr','run-irr','write-irr']},
+  {id:'get-series',name:'get系まとめ',emoji:'💪',desc:'get up / get along / get rid of...',ids:['get-up','get-out','get-off','get-back','get-together','get-along','get-by','get-down','get-away','get-ahead','get-around','get-into','get-rid-of','get-used-to','get-lost','get-ready','get-dressed','get-married','get-hurt','get-better','get-worse','get-excited','get-tired','get-bored','get-angry','get-confused','get-started','get-promoted','get-fired','get-paid']},
+  {id:'take-series',name:'take系まとめ',emoji:'🤲',desc:'take off / take over / take care of...',ids:['take-off','take-out','take-in','take-back','take-on','take-over','take-up','take-down','take-away','take-apart','take-care-of','take-a-break','take-a-walk','take-a-look','take-turns','take-place','take-part','take-a-photo','take-a-seat','take-action','take-a-risk','take-notes','take-time','take-responsibility','take-advantage']},
+  {id:'make-series',name:'make系まとめ',emoji:'🛠',desc:'make sense / make a decision...',ids:['make-up','make-sense','make-friends','make-a-decision','make-progress','make-a-mistake','make-an-effort','make-a-plan','make-sure','make-money','make-a-difference','make-it','make-up-for','make-do','make-a-call','make-room','make-a-point','make-fun-of','make-believe','make-a-reservation']},
+  {id:'juniors',name:'中学英語 全動詞',emoji:'🏫',desc:'感情・行動・会話・生活・仕事',ids:['love','like','enjoy','prefer','hate','fear','worry','hope','wish','wonder','miss','mind','need','want','seem','appear','agree','disagree','believe','forget','remember','understand','know','think','feel','walk','run2','jump2','swim','fly2','drive','ride','sit2','stand2','lie-down','carry','lift','drop2','open2','close2','enter2','return2','turn2','stop2','start2','continue2','visit','wait','climb2','fall2','say2','speak2','talk2','ask2','answer2','call2','listen2','hear2','read2','write2','explain2','introduce2','invite2','refuse2','accept2','promise2','apologize2','suggest2','recommend2','warn2','wake2','sleep2','eat2','drink2','cook2','clean2','wash2','buy2','sell2','spend2','pay2','save2','borrow','lend','use2','try2','check2','look-for','find2','lose2','keep2','show2','send2','receive2','give2','work2','study2','learn2','teach2','help2','plan2','decide2','solve','create2','build2','improve2','practice2','prepare2','finish2','fail2','succeed','achieve','manage','consider','include']},
+    {id:'irregular',name:'不規則動詞',emoji:'📝',desc:'go/went/gone など20語',ids:['go-irr','come-irr','see-irr','get-irr','give-irr','take-irr','make-irr','know-irr','think-irr','say-irr','tell-irr','find-irr','feel-irr','break-irr','bring-irr','buy-irr','catch-irr','choose-irr','run-irr','write-irr']},
 ];
 
 // ── STATE ──
 var currentWords = [];
 var idx = 0, rev = false, ap = false;
 var t1, t2;
-var cfg = { rate: 1.0, readCount: 2, gender: 'auto' };
+var cfg = { rate: 1.0, readCount: 2, gender: 'auto', readJa: true, pause: 1.0 };
 var voices = [], selVoice = null;
 
 // ── TTS ──
 function clean(t){ return t.replace(/^[★→\s]+/,''); }
-function spk(text, times, cb){
+function spkLang(text, lang, voice, times, cb){
   if(!window.speechSynthesis) return cb && cb();
   speechSynthesis.cancel();
   var n = 0;
   function once(){
     var u = new SpeechSynthesisUtterance(clean(text));
-    u.lang = 'en-US'; u.rate = cfg.rate;
-    if(selVoice) u.voice = selVoice;
+    u.lang = lang; u.rate = cfg.rate;
+    if(voice) u.voice = voice;
     u.onend = function(){
       n++;
-      if(n < times){ setTimeout(once, 500); }
+      if(n < times){ setTimeout(once, 400); }
       else if(cb){ setTimeout(cb, 200); }
     };
+    u.onerror = function(){ if(cb) setTimeout(cb, 300); };
     speechSynthesis.speak(u);
   }
   once();
 }
+function spk(text, times, cb){ spkLang(text, 'en-US', selVoice, times, cb); }
+function spkJa(text, times, cb){ spkLang(text, 'ja-JP', null, times, cb); }
 function spkOnce(text){ spk(text, 1, null); }
+function replayWord(){ if(currentWords[idx]) spkOnce(currentWords[idx].w); }
+function replayEn(){ if(currentWords[idx] && rev) spk(currentWords[idx].en, 1, null); }
+function replayJa(){ if(currentWords[idx] && rev && cfg.readJa) spkJa(currentWords[idx].ja, 1, null); }
 
 // voice loading
 function loadVoices(){
@@ -604,6 +832,15 @@ function setSpeed(v){
 function setReadCount(n){
   cfg.readCount = n;
   document.querySelectorAll('#readBtns .btn-opt').forEach(function(b){ b.classList.toggle('active', parseInt(b.textContent) === n); });
+}
+function setReadJa(v){
+  cfg.readJa = v;
+  document.querySelectorAll('#readJaBtns .btn-opt').forEach(function(b){ b.classList.toggle('active', (b.textContent==='読む') === v); });
+}
+function setPause(v){
+  cfg.pause = v;
+  var labels = {0.5:'短め',1.0:'普通',1.8:'長め'};
+  document.querySelectorAll('#pauseBtns .btn-opt').forEach(function(b){ b.classList.toggle('active', parseFloat(b.textContent===labels[v]||b.getAttribute('data-v')==v) || b.textContent===labels[v]); });
 }
 function setGender(g){
   cfg.gender = g;
@@ -669,7 +906,10 @@ function reveal(){
   $('mn').classList.remove('hid');
   $('ex').classList.add('vis');
   $('bt').textContent = '隠す';
-  spkOnce(currentWords[idx].en);
+  var d = currentWords[idx];
+  spk(d.en, 1, function(){
+    if(cfg.readJa && !ap) spkJa(d.ja, 1, null);
+  });
 }
 function hide(){
   rev = false;
@@ -697,37 +937,57 @@ function stopAuto(){
   $('pf').style.transition = 'none';
   $('pf').style.width = '0%';
 }
+function setPbAnim(sec){
+  $('pf').style.transition = 'none'; $('pf').style.width = '0%';
+  setTimeout(function(){
+    $('pf').style.transition = 'width '+sec+'s linear';
+    $('pf').style.width = '100%';
+  }, 50);
+}
 function cycle(){
   if(!ap) return;
-  // reset card
   var d = currentWords[idx];
+  // show card
   $('ac').className = 'ac ' + d.a;
   $('ct').textContent = d.c; $('wd').textContent = d.w; $('mn').textContent = d.m;
   $('een').textContent = d.en; $('eja').textContent = d.ja;
   $('cn').textContent = (idx+1) + ' / ' + currentWords.length;
   rev = false; $('mn').classList.add('hid'); $('ex').classList.remove('vis');
   $('bt').textContent = '意味・例文を表示';
-  $('pf').style.transition = 'none'; $('pf').style.width = '0%';
-  // progress bar
-  setTimeout(function(){
+  setPbAnim(10);
+
+  // STEP1: 単語を N 回読む → 完了コールバックで次へ
+  spk(d.w, cfg.readCount, function(){
     if(!ap) return;
-    $('pf').style.transition = 'width 8s linear';
-    $('pf').style.width = '100%';
-  }, 50);
-  // read word N times then wait
-  spk(d.w, cfg.readCount, null);
-  t1 = setTimeout(function(){
-    if(!ap) return;
-    rev = true; $('mn').classList.remove('hid'); $('ex').classList.add('vis');
-    $('bt').textContent = '隠す';
-    // read example N times then next card
-    spk(d.en, cfg.readCount, null);
-    t2 = setTimeout(function(){
+    // 0.8秒後に意味・例文を表示
+    t1 = setTimeout(function(){
       if(!ap) return;
-      idx = (idx+1) % currentWords.length;
-      cycle();
-    }, 4000);
-  }, 4000);
+      rev = true;
+      $('mn').classList.remove('hid'); $('ex').classList.add('vis');
+      $('bt').textContent = '隠す';
+
+      // STEP2: 英語例文を N 回読む → 完了コールバックで次へ
+      spk(d.en, cfg.readCount, function(){
+        if(!ap) return;
+
+        // STEP3: 和訳を読む（設定オン時）
+        function afterJa(){
+          if(!ap) return;
+          // カード間ポーズ後に次へ
+          t2 = setTimeout(function(){
+            if(!ap) return;
+            idx = (idx+1) % currentWords.length;
+            cycle();
+          }, cfg.pause * 1000);
+        }
+        if(cfg.readJa){
+          spkJa(d.ja, 1, afterJa);
+        } else {
+          afterJa();
+        }
+      });
+    }, 800);
+  });
 }
 
 // ── SWIPE ──
