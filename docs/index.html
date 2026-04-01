@@ -13,7 +13,7 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
 .screen{width:100%;display:flex;flex-direction:column;align-items:center;}
 
 /* ── HOME SCREEN ── */
-#home{padding:28px 16px 40px;max-width:420px;margin:0 auto;}
+#home{padding:28px 16px 40px;max-width:420px;margin:0 auto;width:100%;}
 .home-header{text-align:center;margin-bottom:28px;}
 .home-title{font-size:1.8rem;font-weight:800;letter-spacing:2px;color:var(--tm);}
 .home-sub{font-size:.85rem;color:var(--ts);margin-top:4px;}
@@ -24,6 +24,16 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
 .deck-name{font-size:.88rem;font-weight:600;color:var(--tm);line-height:1.3;margin-bottom:4px;}
 .deck-count{font-size:.75rem;color:var(--ts);}
 .deck-card.featured{grid-column:1/-1;background:linear-gradient(135deg,#1e3a5f,#172554);border-color:#2563eb;}
+.about-card{background:var(--frm);border:1px solid #2a2a2a;border-radius:16px;padding:16px 18px;margin-bottom:20px;max-width:420px;width:100%;}
+.about-title{font-size:.78rem;font-weight:600;color:var(--ts);letter-spacing:.5px;margin-bottom:8px;}
+.about-text{font-size:.82rem;color:#c0c0c0;line-height:1.7;margin-bottom:0;}
+.about-text strong{color:var(--tm);}
+.about-text em{color:var(--ts);font-style:normal;}
+.about-divider{height:1px;background:#2a2a2a;margin:14px 0;}
+.about-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.tag{font-size:.72rem;padding:4px 10px;border-radius:20px;font-weight:500;}
+.tag-ok{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);}
+.tag-ng{background:rgba(255,255,255,.05);color:var(--ts);border:1px solid #333;}
 
 /* ── PHONE FRAME ── */
 .phone{width:360px;max-width:100vw;height:680px;max-height:100dvh;background:var(--frm);border-radius:36px;border:6px solid #3a3a3a;box-shadow:0 0 0 1px #222,0 24px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;overflow:hidden;position:relative;}
@@ -92,8 +102,30 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
 <div id="home" class="screen">
   <div class="home-header">
     <div class="home-title">import</div>
-    <div class="home-sub">うごく単語帳 — デッキを選んでスタート</div>
+    <div class="home-sub">うごく英単語 — デッキを選んでスタート</div>
   </div>
+
+  <div class="about-card">
+    <div class="about-title">💡 このアプリについて</div>
+    <p class="about-text">
+      英単語のコアイメージを<strong>アニメーション</strong>で体感する単語帳です。
+      青い丸・三角・矢印などの図形が動くことで、前置詞や動詞の空間的なニュアンスを視覚的にインストールします。
+    </p>
+    <div class="about-divider"></div>
+    <div class="about-title">⚠️ 表現の限界について</div>
+    <p class="about-text">
+      このアプリは<strong>動き・位置関係</strong>の表現が得意です。そのため収録単語は動詞・前置詞・句動詞が中心です。
+      形容詞（<em>beautiful, huge</em> など）や抽象名詞（<em>freedom, idea</em> など）は図形では表現しにくいため、収録対象外となっています。
+    </p>
+    <div class="about-tags">
+      <span class="tag tag-ok">✓ 動詞</span>
+      <span class="tag tag-ok">✓ 前置詞</span>
+      <span class="tag tag-ok">✓ 句動詞</span>
+      <span class="tag tag-ng">△ 形容詞</span>
+      <span class="tag tag-ng">△ 抽象名詞</span>
+    </div>
+  </div>
+
   <div class="deck-grid" id="deckGrid"></div>
 </div>
 
