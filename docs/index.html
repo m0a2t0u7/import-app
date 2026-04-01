@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>import - うごく単語帳</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--acc:#3b82f6;--bg:#0a0a0a;--frm:#171717;--crd:#262626;--tm:#fff;--ts:#a3a3a3;}
+body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+/* ── phone frame (PC) ── */
+.phone{width:360px;max-width:100vw;height:680px;max-height:100dvh;background:var(--frm);border-radius:36px;border:6px solid #3a3a3a;box-shadow:0 0 0 1px #222,0 24px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+@media(max-width:400px){.phone{border-radius:0;border:none;box-shadow:none;width:100vw;height:100dvh;}}
+
+/* notch */
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:110px;height:24px;background:#3a3a3a;border-bottom-left-radius:14px;border-bottom-right-radius:14px;z-index:20;}
+
+/* animation area */
+.aa{width:100%;height:200px;background:#000;position:relative;overflow:hidden;flex-shrink:0;}
+.ac{width:100%;height:100%;position:relative;}
+
+/* shapes */
+.ball{width:28px;height:28px;background:var(--acc);border-radius:50%;position:absolute;z-index:2;}
+.box{background:#555;position:absolute;z-index:1;}
+.tri,.ring,.dia,.arr,.star,.b2,.b3{display:none;position:absolute;z-index:2;}
+.tri{width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid var(--acc);}
+.ring{width:30px;height:30px;border:4px solid var(--acc);border-radius:50%;background:transparent;box-sizing:border-box;}
+.dia{width:22px;height:22px;background:var(--acc);}
+.arr{width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:22px solid var(--acc);}
+.star{width:26px;height:26px;background:#fbbf24;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.b2{width:26px;height:26px;background:#22c55e;border-radius:50%;}
+.b3{width:26px;height:26px;background:#ef4444;border-radius:50%;}
+
+/* progress */
+.pb{height:3px;background:rgba(255,255,255,.15);position:absolute;bottom:0;left:0;right:0;}
+.pf{height:100%;background:var(--acc);width:0%;}
+
+/* autoplay btn */
+.ab{position:absolute;top:12px;right:12px;background:rgba(59,130,246,.85);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;z-index:10;font-family:inherit;}
+.sb{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.12);color:var(--ts);border:none;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;z-index:10;display:none;font-family:inherit;}
+
+/* content */
+.cnt{flex:1;padding:16px 22px 6px;display:flex;flex-direction:column;background:var(--bg);min-height:0;}
+.cn{font-size:11px;color:var(--ts);text-align:right;margin-bottom:4px;}
+.ct{font-size:10px;color:var(--ts);text-transform:uppercase;letter-spacing:1.5px;text-align:center;margin-bottom:3px;}
+.wd{font-size:2rem;font-weight:700;text-align:center;color:var(--tm);margin-bottom:5px;}
+.mn{font-size:.95rem;font-weight:500;color:var(--acc);text-align:center;min-height:1.4em;margin-bottom:10px;transition:opacity .25s;}
+.mn.hid{opacity:0;}
+.ex{background:var(--crd);border-radius:12px;padding:12px 14px;font-size:.85rem;line-height:1.7;flex:1;opacity:0;transition:opacity .25s;overflow:hidden;}
+.ex.vis{opacity:1;}
+.een{color:var(--tm);font-weight:500;}
+.eja{color:var(--ts);margin-top:6px;padding-left:1em;}
+
+/* controls */
+.ctrl{display:flex;justify-content:space-between;align-items:center;padding:12px 18px 28px;background:var(--frm);flex-shrink:0;}
+.bn{width:44px;height:44px;border-radius:50%;background:#333;border:none;color:var(--tm);font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .15s;}
+.bn:active{background:#444;}
+.bm{background:var(--acc);color:#fff;border:none;border-radius:22px;padding:11px 22px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;}
+.bm:active{opacity:.85;}
+
+/* swipe hint */
+.hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.2);white-space:nowrap;pointer-events:none;}
+
+/* ── animations ── */
+.anim-jump-over .ball,.anim-get-over .ball,.anim-overcome .ball{animation:jover 2s cubic-bezier(.25,.46,.45,.94) infinite;}
+.anim-jump-over .box,.anim-get-over .box,.anim-overcome .box{width:64px;height:20px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes jover{0%{left:8%;bottom:32px}50%{left:50%;bottom:118px}100%{left:88%;bottom:32px}}
+.anim-walk-around .ball,.anim-travel-around .ball{animation:waround 4s ease-in-out infinite;}
+.anim-walk-around .box,.anim-travel-around .box{width:120px;height:14px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes waround{0%{left:18%;transform:scale(1)}25%{left:78%;transform:scale(1)}50%{left:78%;transform:scale(.6)}75%{left:18%;transform:scale(.6)}100%{left:18%;transform:scale(1)}}
+.anim-look-up .ball{left:38%;bottom:32px;animation:lup 2s ease-in-out infinite;}
+.anim-look-up .box{width:20px;height:120px;bottom:32px;left:68%;}
+@keyframes lup{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.3) translateY(-8px)}}
+.anim-run-away .ball{animation:raway 1.8s linear infinite;bottom:32px;}
+.anim-run-away .box{width:36px;height:36px;background:#8b0000;border-radius:4px;bottom:32px;left:78%;}
+@keyframes raway{0%{left:58%}100%{left:-14%}}
+.anim-arrive-at .ball,.anim-get-to .ball,.anim-reach .ball,.anim-come-to .ball{animation:arrat 2.2s ease-out infinite;bottom:32px;}
+.anim-arrive-at .box,.anim-get-to .box,.anim-reach .box,.anim-come-to .box{width:8px;height:60px;bottom:32px;left:72%;}
+@keyframes arrat{0%{left:-8%}60%,100%{left:60%}}
+.anim-in .ball,.anim-put-in .ball,.anim-drop-in .ball,.anim-go-in .ball{left:50%;transform:translateX(-50%);animation:inA 2s ease-in-out infinite;}
+.anim-in .box,.anim-put-in .box,.anim-drop-in .box,.anim-go-in .box{width:60px;height:38px;background:transparent;border:5px solid #555;border-top:none;border-radius:0 0 10px 10px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes inA{0%{bottom:120px}55%,100%{bottom:36px}}
+.anim-on .ball,.anim-put-on .ball,.anim-get-on .ball{left:50%;transform:translateX(-50%);animation:onA 2s ease-in-out infinite;}
+.anim-on .box,.anim-put-on .box,.anim-get-on .box{width:100px;height:10px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes onA{0%{bottom:120px}55%,100%{bottom:44px}}
+.anim-at .ball{animation:atA 2s ease-out infinite;bottom:32px;}
+.anim-at .box{width:12px;height:12px;border-radius:50%;background:#ff4444;bottom:32px;left:68%;}
+@keyframes atA{0%{left:8%}55%,100%{left:53%}}
+.anim-through .ball,.anim-go-through .ball,.anim-pass-through .ball,.anim-get-through .ball{animation:thru 2.5s linear infinite;bottom:32px;}
+.anim-through .box,.anim-go-through .box,.anim-pass-through .box,.anim-get-through .box{width:40px;height:60px;background:transparent;border-top:8px solid #555;border-bottom:8px solid #555;bottom:18px;left:50%;transform:translateX(-50%);}
+@keyframes thru{0%{left:-8%}100%{left:108%}}
+.anim-between .ball,.anim-stand-between .ball{animation:btwn 2.5s ease-in-out infinite;bottom:32px;}
+.anim-between .box,.anim-stand-between .box{width:20px;height:60px;bottom:32px;left:20%;box-shadow:130px 0 0 #555;}
+@keyframes btwn{0%{left:-8%}45%,100%{left:40%}}
+.anim-fall-down .ball{animation:fdown 2.5s ease-in infinite;}
+.anim-fall-down .box{width:120px;height:95px;clip-path:polygon(0 100%,100% 100%,0 0);bottom:32px;left:8%;border-radius:0;}
+@keyframes fdown{0%{left:4%;bottom:128px;transform:rotate(0)}42%{left:54%;bottom:32px;transform:rotate(360deg)}100%{left:116%;bottom:32px;transform:rotate(720deg)}}
+.anim-hit .ball,.anim-strike .ball,.anim-crash-into .ball{animation:hitB 2s infinite;bottom:32px;}
+.anim-hit .box,.anim-strike .box,.anim-crash-into .box{width:18px;height:76px;bottom:32px;left:70%;animation:hitW 2s infinite;border-radius:0;}
+@keyframes hitB{0%{left:0}40%{left:60%}50%{left:55%}100%{left:55%}}
+@keyframes hitW{0%,39%{transform:skewX(0);left:70%}40%{transform:skewX(14deg);left:72%}50%,100%{transform:skewX(0);left:70%}}
+.anim-pass-over .ball,.anim-fly-over .ball{animation:pover 3s linear infinite;bottom:120px;}
+.anim-pass-over .box,.anim-fly-over .box{width:60px;height:30px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes pover{0%{left:-8%}100%{left:108%}}
+.anim-look-around .ball{bottom:32px;left:50%;transform:translateX(-50%);animation:laround 3s ease-in-out infinite;}
+.anim-look-around .box{display:none;}
+@keyframes laround{0%,100%{left:50%}25%{left:28%}75%{left:70%}}
+.anim-turn-around .ball{bottom:32px;left:50%;transform:translateX(-50%);}
+.anim-turn-around .box{display:none;}
+.anim-go-up .ball{animation:goup 3s steps(4,end) infinite;}
+.anim-go-up .box{width:30px;height:20px;bottom:32px;left:28%;box-shadow:30px -20px 0 #555,60px -40px 0 #555;border-radius:0;}
+@keyframes goup{0%{left:8%;bottom:32px}100%{left:90%;bottom:92px}}
+.anim-stand-up .ball{left:50%;animation:stdup 2.2s ease-in-out infinite;transform-origin:bottom center;}
+.anim-stand-up .box{width:100px;height:10px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes stdup{0%,20%{bottom:42px;transform:translateX(-50%) scale(1.5,.3)}55%,85%{bottom:42px;transform:translateX(-50%) scale(.9,1.1)}100%{bottom:42px;transform:translateX(-50%) scale(1.5,.3)}}
+.anim-grow-up .ball{left:50%;bottom:32px;animation:gup 3s ease-in-out infinite;transform-origin:bottom center;}
+.anim-grow-up .box{display:none;}
+@keyframes gup{0%,20%{transform:translateX(-50%) scale(.4)}80%,100%{transform:translateX(-50%) scale(1.5)}}
+.anim-go-away .ball,.anim-walk-away .ball,.anim-leave .ball{bottom:32px;animation:waway 3.5s linear infinite;}
+.anim-go-away .box,.anim-walk-away .box,.anim-leave .box{display:none;}
+@keyframes waway{0%{left:38%;opacity:1;transform:scale(1)}100%{left:108%;opacity:0;transform:scale(.4)}}
+.anim-rely-on .ball{animation:relyon 3s ease-in-out infinite;transform-origin:bottom right;}
+.anim-rely-on .box{width:20px;height:76px;bottom:32px;left:68%;}
+@keyframes relyon{0%,100%{left:28%;bottom:32px;transform:rotate(0)}45%,65%{left:52%;bottom:32px;transform:rotate(15deg)}}
+.anim-aim-at .ball,.anim-look-at .ball,.anim-point-at .ball{animation:aimat 2.2s cubic-bezier(.8,0,1,1) infinite;}
+.anim-aim-at .box,.anim-look-at .box,.anim-point-at .box{width:38px;height:38px;background:transparent;border:4px solid #ff4444;border-radius:50%;bottom:62px;left:68%;}
+@keyframes aimat{0%,20%{left:8%;bottom:32px}80%,100%{left:73%;bottom:66px;transform:scale(.5)}}
+.anim-choose-between .ball,.anim-distinguish-between .ball{animation:chbtw 4s ease-in-out infinite;}
+.anim-choose-between .box,.anim-distinguish-between .box{width:30px;height:10px;bottom:32px;left:18%;box-shadow:130px 0 0 #555;border-radius:0;}
+@keyframes chbtw{0%{left:42%;bottom:32px}20%{left:16%;bottom:60px}40%{left:42%;bottom:32px}60%{left:68%;bottom:60px}80%,100%{left:16%;bottom:40px}}
+.anim-go-down .ball{left:50%;transform:translateX(-50%);animation:gdown 3s ease-in-out infinite;}
+.anim-go-down .box{width:100%;height:20px;bottom:30px;background:#1a56db;opacity:.5;z-index:3;}
+@keyframes gdown{0%,20%{bottom:100px;opacity:1}80%,100%{bottom:2px;opacity:0}}
+.anim-break-down .ball{display:none;}
+.anim-break-down .box{width:60px;height:60px;bottom:32px;left:50%;transform:translateX(-50%);animation:brkd 3s infinite;border-radius:0;}
+@keyframes brkd{0%,40%{height:60px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%);background:#555}46%{clip-path:polygon(0 0,38% 40%,100% 0,78% 100%,0 100%);background:#f44}55%,100%{height:10px;clip-path:polygon(0 78%,28% 100%,68% 78%,100% 100%);background:#555;opacity:.5}}
+.anim-bump-into .ball{bottom:32px;animation:bmpB 2s infinite;}
+.anim-bump-into .box{width:28px;height:28px;background:#22c55e;border-radius:50%;bottom:32px;left:68%;animation:bmpBx 2s infinite;}
+@keyframes bmpB{0%,20%{left:8%}50%{left:58%}72%,100%{left:53%}}
+@keyframes bmpBx{0%,49%{left:68%}50%{transform:scaleX(.75)}72%,100%{left:73%;transform:scaleX(1)}}
+.anim-step-on .ball{left:50%;transform:translateX(-50%);animation:stpB 2.5s infinite;}
+.anim-step-on .box{width:60px;height:20px;bottom:32px;left:50%;transform:translateX(-50%);animation:stpBx 2.5s infinite;}
+@keyframes stpB{0%,20%{bottom:118px}42%,100%{bottom:38px}}
+@keyframes stpBx{0%,39%{height:20px;background:#555}40%,100%{height:5px;background:#f44}}
+.anim-sit-down .ball{animation:sitd 3s ease-in-out infinite;}
+.anim-sit-down .box{width:38px;height:38px;background:transparent;border-bottom:10px solid #555;border-left:10px solid #555;bottom:32px;left:48%;border-radius:0;}
+@keyframes sitd{0%,20%{left:18%;bottom:32px}42%,100%{left:50%;bottom:40px;transform:scaleY(.8)}}
+
+/* 新30シェイプ */
+.anim-bounce .ball{left:50%;animation:bnc 1.4s ease-in infinite;}
+.anim-bounce .box{width:130px;height:5px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes bnc{0%{bottom:37px;transform:translateX(-50%) scaleY(.7)}10%{transform:translateX(-50%) scaleY(1)}35%{bottom:128px;transform:translateX(-50%)}60%{bottom:37px;transform:translateX(-50%) scaleY(.8)}85%{bottom:76px;transform:translateX(-50%)}100%{bottom:37px;transform:translateX(-50%)}}
+.anim-spin .dia{display:block;left:46%;bottom:75px;animation:spn 1.2s linear infinite;}
+.anim-spin .ball,.anim-spin .box{display:none;}
+@keyframes spn{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.anim-float .ball{left:50%;transform:translateX(-50%);animation:flt 2s ease-in-out infinite;}
+.anim-float .box{display:none;}
+@keyframes flt{0%,100%{bottom:52px}50%{bottom:118px}}
+.anim-expand .ring{display:block;animation:exp_ 1.8s ease-out infinite;}
+.anim-expand .ball{left:50%;transform:translateX(-50%);bottom:72px;}
+.anim-expand .box{display:none;}
+@keyframes exp_{0%{width:8px;height:8px;left:47%;bottom:76px;opacity:1}90%,100%{width:120px;height:120px;left:13%;bottom:14px;opacity:0}}
+.anim-orbit .star{display:block;left:44%;bottom:68px;}
+.anim-orbit .ball{animation:orb_ 2.5s linear infinite;}
+.anim-orbit .box{display:none;}
+@keyframes orb_{0%,100%{left:44%;bottom:128px}25%{left:80%;bottom:68px}50%{left:44%;bottom:10px}75%{left:8%;bottom:68px}}
+.anim-zigzag .arr{display:block;animation:zzg 2.5s linear infinite;}
+.anim-zigzag .ball,.anim-zigzag .box{display:none;}
+@keyframes zzg{0%{left:-5%;bottom:64px}20%{left:22%;bottom:130px}40%{left:48%;bottom:64px}60%{left:74%;bottom:130px}80%,100%{left:108%;bottom:64px}}
+.anim-climb .ball{left:50%;transform:translateX(-50%);animation:clmb 2.5s ease-in-out infinite;}
+.anim-climb .box{width:6px;height:158px;bottom:22px;left:50%;}
+@keyframes clmb{0%,10%{bottom:22px}80%,100%{bottom:168px}}
+.anim-follow .ball{animation:lead_ 3s linear infinite;bottom:32px;}
+.anim-follow .b2{display:block;animation:trail_ 3s linear infinite;bottom:32px;}
+.anim-follow .box{display:none;}
+@keyframes lead_{0%{left:5%}100%{left:108%}}
+@keyframes trail_{0%{left:-12%}100%{left:88%}}
+.anim-overtake .ball{bottom:32px;animation:fast_ 2s linear infinite;}
+.anim-overtake .b2{display:block;bottom:40px;animation:slow_ 2s linear infinite;}
+.anim-overtake .box{display:none;}
+@keyframes fast_{0%{left:-5%}100%{left:108%}}
+@keyframes slow_{0%{left:-22%}100%{left:78%}}
+.anim-throw .ball{animation:thrw_ 2s ease-in-out infinite;}
+.anim-throw .box{display:none;}
+@keyframes thrw_{0%{left:10%;bottom:32px}50%{left:50%;bottom:158px}100%{left:90%;bottom:32px}}
+.anim-roll .ball{bottom:38px;animation:roll_ 2s linear infinite;}
+.anim-roll .box{width:130px;height:5px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes roll_{0%{left:-5%;transform:rotate(0)}100%{left:108%;transform:rotate(720deg)}}
+.anim-scatter .ball{animation:sc1 2s ease-out infinite;}
+.anim-scatter .b2{display:block;animation:sc2 2s ease-out infinite;}
+.anim-scatter .b3{display:block;animation:sc3 2s ease-out infinite;}
+.anim-scatter .box{display:none;}
+@keyframes sc1{0%,15%{left:47%;bottom:80px;opacity:1}80%,100%{left:5%;bottom:32px;opacity:.3}}
+@keyframes sc2{0%,15%{left:47%;bottom:80px;opacity:1}80%,100%{left:47%;bottom:160px;opacity:.3}}
+@keyframes sc3{0%,15%{left:47%;bottom:80px;opacity:1}80%,100%{left:84%;bottom:32px;opacity:.3}}
+.anim-gather .ball{animation:ga1 2s ease-in infinite;}
+.anim-gather .b2{display:block;animation:ga2 2s ease-in infinite;}
+.anim-gather .b3{display:block;animation:ga3 2s ease-in infinite;}
+.anim-gather .box{display:none;}
+@keyframes ga1{0%{left:5%;bottom:32px;opacity:.3}80%,100%{left:47%;bottom:80px;opacity:1}}
+@keyframes ga2{0%{left:47%;bottom:160px;opacity:.3}80%,100%{left:47%;bottom:80px;opacity:1}}
+@keyframes ga3{0%{left:84%;bottom:32px;opacity:.3}80%,100%{left:47%;bottom:80px;opacity:1}}
+.anim-emerge .ball{left:50%;transform:translateX(-50%);animation:emrg 2.5s ease-out infinite;}
+.anim-emerge .box{width:60px;height:44px;background:transparent;border:5px solid #555;border-top:none;border-radius:0 0 10px 10px;bottom:32px;left:50%;transform:translateX(-50%);}
+@keyframes emrg{0%,20%{bottom:36px;opacity:.2}70%,100%{bottom:128px;opacity:1}}
+.anim-sink .ball{left:50%;transform:translateX(-50%);animation:snk 2s ease-in infinite;}
+.anim-sink .box{width:100%;height:8px;bottom:30px;background:#1a56db;opacity:.6;z-index:3;}
+@keyframes snk{0%{bottom:108px;opacity:1}70%,100%{bottom:10px;opacity:0}}
+.anim-peek .ball{animation:peek_ 3s ease-in-out infinite;bottom:32px;}
+.anim-peek .box{width:20px;height:96px;bottom:32px;left:65%;}
+@keyframes peek_{0%,20%{left:20%}50%,70%{left:51%}90%,100%{left:20%}}
+.anim-break-free .ball{left:50%;transform:translateX(-50%);animation:brkf 2.5s ease-in infinite;}
+.anim-break-free .box{width:60px;height:60px;background:transparent;border:5px solid #555;border-radius:4px;bottom:32px;left:50%;transform:translateX(-50%);animation:brkfbx 2.5s ease-in infinite;}
+@keyframes brkf{0%,35%{bottom:44px}70%{bottom:168px;opacity:1}100%{bottom:168px;opacity:0}}
+@keyframes brkfbx{0%,49%{border-color:#555}55%{border-color:#f44;transform:translateX(-50%) scale(1.3)}65%,100%{border-color:#555;transform:translateX(-50%) scale(1)}}
+.anim-cross .ball{bottom:44px;animation:crs 2.5s linear infinite;}
+.anim-cross .box{width:100%;height:22px;bottom:32px;background:#1a56db;opacity:.3;}
+@keyframes crs{0%{left:-5%}100%{left:108%}}
+.anim-block .ball{animation:blk 2s ease-out infinite;bottom:32px;}
+.anim-block .b3{display:block;width:16px;height:74px;background:#ef4444;border-radius:2px;bottom:32px;left:62%;animation:blkr 2s ease-out infinite;}
+.anim-block .box{display:none;}
+@keyframes blk{0%{left:-5%}60%,100%{left:47%}}
+@keyframes blkr{0%,59%{transform:scaleX(1)}62%{transform:scaleX(1.5)}100%{transform:scaleX(1)}}
+.anim-rise .tri{display:block;animation:rise_ 2.5s ease-out infinite;}
+.anim-rise .ball,.anim-rise .box{display:none;}
+@keyframes rise_{0%{left:44%;bottom:22px;opacity:.3}70%,100%{left:44%;bottom:158px;opacity:1}}
+.anim-dive .ball{left:50%;animation:dv_ 1.8s ease-in infinite;}
+.anim-dive .box{display:none;}
+@keyframes dv_{0%{bottom:164px;transform:translateX(-50%);opacity:1}80%,100%{bottom:0;transform:translateX(-50%);opacity:0}}
+.anim-swing .ball{left:50%;animation:swng 1.5s ease-in-out infinite;transform-origin:50% -60px;}
+.anim-swing .box{display:none;}
+@keyframes swng{0%,100%{transform:translateX(-50%) rotate(-32deg)}50%{transform:translateX(-50%) rotate(32deg)}}
+.anim-surround .ring{display:block;animation:srd_ 2.5s ease-in-out infinite;}
+.anim-surround .ball{left:50%;transform:translateX(-50%);bottom:68px;}
+.anim-surround .box{display:none;}
+@keyframes srd_{0%,5%{width:140px;height:140px;left:10%;bottom:0;opacity:0}70%,85%{width:46px;height:46px;left:38%;bottom:54px;opacity:1}100%{width:140px;height:140px;left:10%;bottom:0;opacity:0}}
+.anim-chase .ball{animation:cha_b 2.5s linear infinite;bottom:32px;}
+.anim-chase .b3{display:block;animation:cha_r 2.5s linear infinite;bottom:32px;}
+.anim-chase .box{display:none;}
+@keyframes cha_b{0%{left:10%}100%{left:108%}}
+@keyframes cha_r{0%{left:-8%}100%{left:90%}}
+.anim-escape .ball{bottom:32px;animation:esc_b 2s ease-in infinite;}
+.anim-escape .b3{display:block;bottom:32px;animation:esc_r 2s ease-in infinite;}
+.anim-escape .box{display:none;}
+@keyframes esc_b{0%,20%{left:45%}100%{left:-12%}}
+@keyframes esc_r{0%{left:56%}100%{left:28%}}
+.anim-pull .star{display:block;left:72%;bottom:68px;}
+.anim-pull .ball{bottom:68px;animation:pll_ 2.5s ease-in infinite;}
+.anim-pull .box{display:none;}
+@keyframes pll_{0%,10%{left:5%}75%,100%{left:58%}}
+.anim-push .ball{bottom:68px;animation:psh_b 2s ease-out infinite;}
+.anim-push .b2{display:block;bottom:68px;animation:psh_g 2s ease-out infinite;}
+.anim-push .box{display:none;}
+@keyframes psh_b{0%,30%{left:44%}100%{left:-12%}}
+@keyframes psh_g{0%{left:50%}30%,100%{left:78%}}
+.anim-weave .ball{animation:wv_b 3s ease-in-out infinite;}
+.anim-weave .b2{display:block;bottom:36px;left:20%;}
+.anim-weave .b3{display:block;bottom:36px;left:60%;}
+.anim-weave .box{display:none;}
+@keyframes wv_b{0%{left:5%;bottom:36px}15%{left:20%;bottom:82px}30%{left:40%;bottom:36px}45%{left:60%;bottom:82px}60%,100%{left:108%;bottom:36px}}
+.anim-approach .ball{animation:appr 2s ease-in infinite;}
+.anim-approach .box{display:none;}
+@keyframes appr{0%{left:5%;bottom:84px;transform:scale(.3)}80%,100%{left:45%;bottom:68px;transform:scale(1.3)}}
+.anim-retreat .ball{animation:retr 2s ease-out infinite;}
+.anim-retreat .box{display:none;}
+@keyframes retr{0%{left:48%;bottom:68px;transform:scale(1.3)}80%,100%{left:90%;bottom:84px;transform:scale(.3);opacity:.4}}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="aa">
+    <div id="ac" class="ac anim-jump-over">
+      <div class="box"></div><div class="ball"></div>
+      <div class="tri"></div><div class="ring"></div>
+      <div class="dia"></div><div class="arr"></div>
+      <div class="star"></div><div class="b2"></div><div class="b3"></div>
+    </div>
+    <button class="ab" id="ab" onclick="startAuto()">▶ 自動再生</button>
+    <button class="sb" id="sb" onclick="stopAuto()">■ 停止</button>
+    <div class="pb"><div class="pf" id="pf"></div></div>
+  </div>
+  <div class="cnt">
+    <div class="cn" id="cn">1 / 80</div>
+    <div class="ct" id="ct">Phrasal Verb</div>
+    <div class="wd" id="wd">jump over</div>
+    <div class="mn hid" id="mn">〜を飛び越える</div>
+    <div class="ex" id="ex">
+      <div class="een" id="een">He jumps over the box.</div>
+      <div class="eja" id="eja">→ 彼は箱を飛び越える。</div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <button class="bn" onclick="prev()">‹</button>
+    <button class="bm" id="bt" onclick="toggle()">意味・例文を表示</button>
+    <button class="bn" onclick="next()">›</button>
+  </div>
+</div>
+
+<script>
+var V=[
+  {w:"jump over",m:"〜を飛び越える",c:"Phrasal Verb",a:"anim-jump-over",en:"He jumps over the box.",ja:"→ 彼は箱を飛び越える。"},
+  {w:"walk around",m:"歩き回る",c:"Phrasal Verb",a:"anim-walk-around",en:"He walks around the forest.",ja:"→ 彼は森を歩き回る。"},
+  {w:"look up",m:"見上げる",c:"Phrasal Verb",a:"anim-look-up",en:"He looks up at the giant tree.",ja:"→ 彼は巨大な木を見上げる。"},
+  {w:"run away",m:"逃げる",c:"Phrasal Verb",a:"anim-run-away",en:"He runs away from the bear.",ja:"→ 彼はクマから逃げる。"},
+  {w:"arrive at",m:"〜に到着する",c:"Phrasal Verb",a:"anim-arrive-at",en:"He arrives at the castle.",ja:"→ 彼は城に到着する。"},
+  {w:"in",m:"〜の中に",c:"Preposition",a:"anim-in",en:"The rabbit is in the box.",ja:"→ うさぎは箱の中にいる。"},
+  {w:"on",m:"〜の上に",c:"Preposition",a:"anim-on",en:"The rabbit is on the box.",ja:"→ うさぎは箱の上に乗る。"},
+  {w:"at",m:"〜の地点に（一点）",c:"Preposition",a:"anim-at",en:"He is waiting at the station.",ja:"→ 彼は駅で待っている。"},
+  {w:"through",m:"〜を通り抜ける",c:"Preposition",a:"anim-through",en:"He walks through the tunnel.",ja:"→ 彼はトンネルを通り抜ける。"},
+  {w:"between",m:"〜の間に",c:"Preposition",a:"anim-between",en:"The rabbit is between the pillars.",ja:"→ うさぎは柱の間にいる。"},
+  {w:"fall down",m:"落ちる / 倒れる",c:"Phrasal Verb",a:"anim-fall-down",en:"He falls down the hill.",ja:"→ 彼は丘から転がり落ちる。"},
+  {w:"hit",m:"〜に激突する",c:"Verb",a:"anim-hit",en:"He hits the wall.",ja:"→ 彼は壁に激突する。"},
+  {w:"get over",m:"〜を乗り越える",c:"Phrasal Verb",a:"anim-get-over",en:"He gets over the difficulty.",ja:"→ 彼は困難を乗り越える。"},
+  {w:"overcome",m:"〜を克服する",c:"Verb",a:"anim-overcome",en:"He overcomes his fear.",ja:"→ 彼は恐怖を克服する。"},
+  {w:"pass over",m:"〜を通り過ぎる",c:"Phrasal Verb",a:"anim-pass-over",en:"The cloud passes over the town.",ja:"→ 雲が町の上を通り過ぎる。"},
+  {w:"look around",m:"見回す",c:"Phrasal Verb",a:"anim-look-around",en:"He looks around the room.",ja:"→ 彼は部屋を見回す。"},
+  {w:"travel around",m:"〜を巡る",c:"Phrasal Verb",a:"anim-travel-around",en:"He travels around the world.",ja:"→ 彼は世界を巡る。"},
+  {w:"turn around",m:"振り向く",c:"Phrasal Verb",a:"anim-turn-around",en:"He turns around quickly.",ja:"→ 彼は素早く振り向く。"},
+  {w:"go up",m:"上がる",c:"Phrasal Verb",a:"anim-go-up",en:"The balloon goes up in the sky.",ja:"→ 風船が空へ上がる。"},
+  {w:"stand up",m:"立ち上がる",c:"Phrasal Verb",a:"anim-stand-up",en:"He stands up slowly.",ja:"→ 彼はゆっくりと立ち上がる。"},
+  {w:"grow up",m:"成長する",c:"Phrasal Verb",a:"anim-grow-up",en:"The boy grows up fast.",ja:"→ その少年は早く成長する。"},
+  {w:"go away",m:"立ち去る",c:"Phrasal Verb",a:"anim-go-away",en:"He goes away without a word.",ja:"→ 彼は無言で立ち去る。"},
+  {w:"walk away",m:"歩き去る",c:"Phrasal Verb",a:"anim-walk-away",en:"She walks away from the shop.",ja:"→ 彼女は店から歩き去る。"},
+  {w:"leave",m:"去る / 出発する",c:"Verb",a:"anim-leave",en:"He leaves the room.",ja:"→ 彼は部屋を去る。"},
+  {w:"get to",m:"〜に着く",c:"Phrasal Verb",a:"anim-get-to",en:"He gets to the station.",ja:"→ 彼は駅に着く。"},
+  {w:"reach",m:"〜に到達する",c:"Verb",a:"anim-reach",en:"He reaches the top.",ja:"→ 彼は頂上に到達する。"},
+  {w:"come to",m:"〜に達する",c:"Phrasal Verb",a:"anim-come-to",en:"He comes to the conclusion.",ja:"→ 彼は結論に達する。"},
+  {w:"go in",m:"中に入る",c:"Phrasal Verb",a:"anim-go-in",en:"He goes in the house.",ja:"→ 彼は家の中に入る。"},
+  {w:"put in",m:"〜を入れる",c:"Phrasal Verb",a:"anim-put-in",en:"He puts the key in his pocket.",ja:"→ 彼は鍵をポケットに入れる。"},
+  {w:"drop in",m:"立ち寄る",c:"Phrasal Verb",a:"anim-drop-in",en:"He drops in at my house.",ja:"→ 彼は私の家に立ち寄る。"},
+  {w:"put on",m:"〜を着る",c:"Phrasal Verb",a:"anim-put-on",en:"He puts on his jacket.",ja:"→ 彼はジャケットを着る。"},
+  {w:"get on",m:"〜に乗る",c:"Phrasal Verb",a:"anim-get-on",en:"He gets on the train.",ja:"→ 彼は電車に乗る。"},
+  {w:"rely on",m:"〜に頼る",c:"Phrasal Verb",a:"anim-rely-on",en:"He relies on his friend.",ja:"→ 彼は友人に頼る。"},
+  {w:"look at",m:"〜を見る",c:"Phrasal Verb",a:"anim-look-at",en:"He looks at the picture.",ja:"→ 彼はその絵を見る。"},
+  {w:"point at",m:"〜を指さす",c:"Phrasal Verb",a:"anim-point-at",en:"He points at the dog.",ja:"→ 彼はその犬を指さす。"},
+  {w:"aim at",m:"〜を狙う",c:"Phrasal Verb",a:"anim-aim-at",en:"He aims at the target.",ja:"→ 彼は的を狙う。"},
+  {w:"go through",m:"通り抜ける / 経験する",c:"Phrasal Verb",a:"anim-go-through",en:"He goes through the forest.",ja:"→ 彼は森を通り抜ける。"},
+  {w:"pass through",m:"通過する",c:"Phrasal Verb",a:"anim-pass-through",en:"The train passes through the tunnel.",ja:"→ 電車はトンネルを通過する。"},
+  {w:"get through",m:"乗り切る",c:"Phrasal Verb",a:"anim-get-through",en:"He gets through the hard time.",ja:"→ 彼は困難な時期を乗り切る。"},
+  {w:"choose between",m:"〜の間で選ぶ",c:"Phrasal Verb",a:"anim-choose-between",en:"He chooses between the two.",ja:"→ 彼は2つの間で選ぶ。"},
+  {w:"stand between",m:"〜の間に立つ",c:"Phrasal Verb",a:"anim-stand-between",en:"He stands between his parents.",ja:"→ 彼は両親の間に立つ。"},
+  {w:"distinguish between",m:"〜を見分ける",c:"Phrasal Verb",a:"anim-distinguish-between",en:"He distinguishes between A and B.",ja:"→ 彼はAとBを見分ける。"},
+  {w:"go down",m:"下がる / 沈む",c:"Phrasal Verb",a:"anim-go-down",en:"The sun goes down.",ja:"→ 太陽が沈む。"},
+  {w:"break down",m:"故障する / 崩れる",c:"Phrasal Verb",a:"anim-break-down",en:"The old car breaks down.",ja:"→ 古い車が故障する。"},
+  {w:"sit down",m:"座る",c:"Phrasal Verb",a:"anim-sit-down",en:"He sits down on the chair.",ja:"→ 彼は椅子に座る。"},
+  {w:"strike",m:"打つ / ぶつかる",c:"Verb",a:"anim-strike",en:"The ball strikes the wall.",ja:"→ ボールが壁にぶつかる。"},
+  {w:"bump into",m:"ばったり出会う",c:"Phrasal Verb",a:"anim-bump-into",en:"He bumps into an old friend.",ja:"→ 彼は古い友人にばったり出会う。"},
+  {w:"crash into",m:"〜に激突する",c:"Phrasal Verb",a:"anim-crash-into",en:"The car crashes into a tree.",ja:"→ 車が木に激突する。"},
+  {w:"step on",m:"〜を踏む",c:"Phrasal Verb",a:"anim-step-on",en:"He steps on a bug.",ja:"→ 彼は虫を踏む。"},
+  {w:"fly over",m:"〜の上を飛ぶ",c:"Phrasal Verb",a:"anim-fly-over",en:"The bird flies over the house.",ja:"→ 鳥が家の上を飛ぶ。"},
+  {w:"bounce",m:"跳ね返る / 弾む",c:"Verb",a:"anim-bounce",en:"The ball bounces off the floor.",ja:"→ ボールが床で跳ね返る。"},
+  {w:"spin",m:"回転する",c:"Verb",a:"anim-spin",en:"The top spins on the table.",ja:"→ コマがテーブルで回転する。"},
+  {w:"float",m:"浮かぶ / 漂う",c:"Verb",a:"anim-float",en:"The balloon floats in the air.",ja:"→ 風船が空中に浮かぶ。"},
+  {w:"expand",m:"広がる / 拡大する",c:"Verb",a:"anim-expand",en:"The bubble expands and bursts.",ja:"→ 泡が広がって割れる。"},
+  {w:"orbit",m:"〜の周りを回る",c:"Verb",a:"anim-orbit",en:"The moon orbits the earth.",ja:"→ 月は地球の周りを回る。"},
+  {w:"zigzag",m:"ジグザグに進む",c:"Verb",a:"anim-zigzag",en:"He zigzags down the slope.",ja:"→ 彼は坂をジグザグに降りる。"},
+  {w:"climb",m:"登る / よじ登る",c:"Verb",a:"anim-climb",en:"He climbs the rope.",ja:"→ 彼はロープを登る。"},
+  {w:"follow",m:"〜についていく",c:"Verb",a:"anim-follow",en:"The puppy follows him everywhere.",ja:"→ 子犬がどこへでも彼についていく。"},
+  {w:"overtake",m:"〜を追い越す",c:"Verb",a:"anim-overtake",en:"He overtakes the other runner.",ja:"→ 彼は他のランナーを追い越す。"},
+  {w:"throw",m:"投げる",c:"Verb",a:"anim-throw",en:"He throws the ball.",ja:"→ 彼はボールを投げる。"},
+  {w:"roll",m:"転がる",c:"Verb",a:"anim-roll",en:"The ball rolls along the floor.",ja:"→ ボールが床を転がる。"},
+  {w:"scatter",m:"散らばる / 散る",c:"Verb",a:"anim-scatter",en:"The leaves scatter in the wind.",ja:"→ 葉っぱが風で散らばる。"},
+  {w:"gather",m:"集まる / 集める",c:"Verb",a:"anim-gather",en:"People gather in the square.",ja:"→ 人々が広場に集まる。"},
+  {w:"emerge",m:"現れる / 出てくる",c:"Verb",a:"anim-emerge",en:"He emerges from the crowd.",ja:"→ 彼は群衆の中から現れる。"},
+  {w:"sink",m:"沈む",c:"Verb",a:"anim-sink",en:"The stone sinks to the bottom.",ja:"→ 石が底に沈む。"},
+  {w:"peek",m:"こっそりのぞく",c:"Verb",a:"anim-peek",en:"He peeks around the corner.",ja:"→ 彼は角からこっそりのぞく。"},
+  {w:"break free",m:"〜から抜け出す",c:"Phrasal Verb",a:"anim-break-free",en:"He breaks free from the trap.",ja:"→ 彼は罠から抜け出す。"},
+  {w:"cross",m:"〜を横断する",c:"Verb",a:"anim-cross",en:"He crosses the river.",ja:"→ 彼は川を横断する。"},
+  {w:"block",m:"〜を塞ぐ / 遮る",c:"Verb",a:"anim-block",en:"The guard blocks his path.",ja:"→ 警備員が彼の道を遮る。"},
+  {w:"rise",m:"上昇する / 昇る",c:"Verb",a:"anim-rise",en:"The sun rises in the east.",ja:"→ 太陽は東から昇る。"},
+  {w:"dive",m:"飛び込む / 急降下する",c:"Verb",a:"anim-dive",en:"He dives into the water.",ja:"→ 彼は水に飛び込む。"},
+  {w:"swing",m:"揺れる / ぶらぶらする",c:"Verb",a:"anim-swing",en:"The child swings on the rope.",ja:"→ 子どもがロープで揺れる。"},
+  {w:"surround",m:"〜を囲む",c:"Verb",a:"anim-surround",en:"The crowd surrounds him.",ja:"→ 群衆が彼を囲む。"},
+  {w:"chase",m:"〜を追いかける",c:"Verb",a:"anim-chase",en:"The dog chases the cat.",ja:"→ 犬が猫を追いかける。"},
+  {w:"escape",m:"逃げ出す / 脱出する",c:"Verb",a:"anim-escape",en:"He escapes from the building.",ja:"→ 彼はビルから逃げ出す。"},
+  {w:"pull",m:"引っ張る / 引き寄せる",c:"Verb",a:"anim-pull",en:"He pulls the rope.",ja:"→ 彼はロープを引っ張る。"},
+  {w:"push",m:"押す / 押しのける",c:"Verb",a:"anim-push",en:"He pushes the door open.",ja:"→ 彼はドアを押して開ける。"},
+  {w:"weave",m:"縫うように進む",c:"Verb",a:"anim-weave",en:"He weaves through the crowd.",ja:"→ 彼は群衆の間を縫うように進む。"},
+  {w:"approach",m:"近づく / 接近する",c:"Verb",a:"anim-approach",en:"He approaches the finish line.",ja:"→ 彼はゴールに近づく。"},
+  {w:"retreat",m:"後退する / 退く",c:"Verb",a:"anim-retreat",en:"The army retreats.",ja:"→ 軍が後退する。"}
+];
+var idx=0,rev=false,ap=false,t1,t2,sx=0;
+function $(i){return document.getElementById(i);}
+function spk(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t.replace(/^[★→\s]+/,''));u.lang='en-US';u.rate=0.9;speechSynthesis.speak(u);}
+function render(){
+  var d=V[idx];
+  $('ac').className='ac '+d.a;
+  $('ct').textContent=d.c;$('wd').textContent=d.w;$('mn').textContent=d.m;
+  $('een').textContent=d.en;$('eja').textContent=d.ja;
+  $('cn').textContent=(idx+1)+' / '+V.length;
+  rev=false;$('mn').classList.add('hid');$('ex').classList.remove('vis');
+  $('bt').textContent='意味・例文を表示';
+  spk(d.w);
+  $('pf').style.transition='none';$('pf').style.width='0%';
+}
+function reveal(){rev=true;$('mn').classList.remove('hid');$('ex').classList.add('vis');$('bt').textContent='隠す';spk(V[idx].en);}
+function hide(){rev=false;$('mn').classList.add('hid');$('ex').classList.remove('vis');$('bt').textContent='意味・例文を表示';}
+function toggle(){if(ap)stopAuto();rev?hide():reveal();}
+function next(){if(ap)stopAuto();idx=(idx+1)%V.length;render();}
+function prev(){if(ap)stopAuto();idx=(idx-1+V.length)%V.length;render();}
+function startAuto(){ap=true;$('ab').style.display='none';$('sb').style.display='block';cycle();}
+function stopAuto(){ap=false;clearTimeout(t1);clearTimeout(t2);$('sb').style.display='none';$('ab').style.display='block';$('pf').style.transition='none';$('pf').style.width='0%';}
+function cycle(){if(!ap)return;render();setTimeout(function(){if(!ap)return;$('pf').style.transition='width 8s linear';$('pf').style.width='100%';},50);t1=setTimeout(function(){if(!ap)return;reveal();t2=setTimeout(function(){if(!ap)return;idx=(idx+1)%V.length;cycle();},4000);},4000);}
+// swipe
+var ph=document.querySelector('.phone');
+ph.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+ph.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){dx<0?next():prev();}});
+render();
+</script>
+</body>
+</html>
