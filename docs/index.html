@@ -42,6 +42,34 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
 .top-bar{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 14px;z-index:15;}
 .btn-back{background:none;border:none;color:var(--ts);font-size:1.1rem;cursor:pointer;padding:6px;font-family:inherit;}
 .btn-settings{background:none;border:none;color:var(--ts);font-size:1.1rem;cursor:pointer;padding:6px;font-family:inherit;}
+/* ── 絵文字シェイプ ── */
+.emoji-shape{position:absolute;font-size:36px;z-index:5;display:none;line-height:1;user-select:none;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+.emoji-shape.show{display:block;}
+
+/* 絵文字 専用アニメーション */
+.emoji-float{animation:emjFloat 2.5s ease-in-out infinite;}
+@keyframes emjFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+.emoji-bounce2{animation:emjBounce 1.2s ease-in-out infinite;}
+@keyframes emjBounce{0%,100%{transform:scaleY(1) translateY(0)}40%{transform:scaleY(.85) translateY(4px)}60%{transform:scaleY(1.1) translateY(-12px)}}
+.emoji-spin2{animation:emjSpin 2s linear infinite;}
+@keyframes emjSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.emoji-slide-in{animation:emjSlide 2s ease-out infinite;}
+@keyframes emjSlide{0%{left:-10%;opacity:0}20%{opacity:1}60%,100%{left:38%;}}
+.emoji-shake2{animation:emjShake .5s ease-in-out infinite;}
+@keyframes emjShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.emoji-pulse{animation:emjPulse 1.5s ease-in-out infinite;}
+@keyframes emjPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.emoji-rise2{animation:emjRise 2s ease-out infinite;}
+@keyframes emjRise{0%{bottom:20px;opacity:.3}70%,100%{bottom:120px;opacity:1}}
+.emoji-fall2{animation:emjFall 1.8s ease-in infinite;}
+@keyframes emjFall{0%{bottom:130px;opacity:1}70%,100%{bottom:10px;opacity:.3}}
+.emoji-swing2{animation:emjSwing 1.5s ease-in-out infinite;transform-origin:50% -30px;}
+@keyframes emjSwing{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(20deg)}}
+.emoji-scatter2{animation:emjSc 2s ease-out infinite;}
+@keyframes emjSc{0%,10%{left:43%;bottom:70px;opacity:1;transform:scale(1)}80%,100%{left:10%;bottom:130px;opacity:.2;transform:scale(.5)}}
+.emoji-rush{animation:emjRush 1.5s linear infinite;}
+@keyframes emjRush{0%{left:-10%}100%{left:108%}}
+
 .wd{cursor:pointer;} .wd:active{opacity:.7;} .een{cursor:pointer;} .een:active{opacity:.7;} .eja{cursor:pointer;} .eja:active{opacity:.7;} .tap-hint{font-size:10px;color:rgba(255,255,255,.18);text-align:center;margin-top:4px;letter-spacing:.5px;}
 .deck-label{font-size:.7rem;color:var(--ts);letter-spacing:.5px;}
 
@@ -145,6 +173,7 @@ body{background:var(--bg);color:var(--tm);font-family:-apple-system,BlinkMacSyst
         <div class="tri"></div><div class="ring"></div>
         <div class="dia"></div><div class="arr"></div>
         <div class="star"></div><div class="b2"></div><div class="b3"></div>
+        <div class="emoji-shape" id="emojiShape"></div>
       </div>
       <button class="btn-auto" id="btnAuto" onclick="startAuto()">▶ 自動再生</button>
       <button class="btn-stop" id="btnStop" onclick="stopAuto()">■ 停止</button>
@@ -1698,7 +1727,208 @@ var W = [
 var WI = {};
 W.forEach(function(w){WI[w.id]=w;});
 
-// ── DECKS ──
+
+// ── 絵文字マップ ──
+var EMOJI_MAP = {
+  'テーマ：旅行':   ['✈️','🗺️','🧳','🏨','🚂'],
+  'テーマ：食事':   ['🍜','🍽️','🥘','🍱','🥗'],
+  'テーマ：健康':   ['💊','🏥','🩺','💉','🧘'],
+  'テーマ：仕事':   ['💼','📊','🖥️','📋','⏰'],
+  'テーマ：人間関係':['🤝','💬','❤️','👫','🙏'],
+  'テーマ：学習':   ['📚','✏️','🎓','💡','🧠'],
+  'テーマ：テク':   ['📱','💻','⚙️','🔧','📡'],
+  'テーマ：お金':   ['💰','💳','🏦','💵','🪙'],
+  '慣用表現':       ['💬','🗣️','🎯','✨','🔥'],
+  '中学形容詞':     ['😊','😨','😤','😴','🥰'],
+  '形容詞':        ['📏','⚡','💪','🌡️','⭐'],
+  '副詞':          ['⚡','🚀','🐢','🎯','✨'],
+  '会話表現':       ['💬','👋','🙌','👍','🤔'],
+  'come系':        ['🚶','👋','💡','📦','🔄'],
+  'look系':        ['👀','🔍','🧐','🔎','👁️'],
+  'turn系':        ['🔄','↩️','🎭','🔁','↪️'],
+  'break系':       ['💥','🔓','💔','🚪','⚡'],
+  'call系':        ['📞','📲','🔔','📣','📢'],
+  'give系':        ['🎁','🤲','📤','💝','🙌'],
+  'hold系':        ['✋','🛑','⏸️','🤗','💪'],
+  'run系':         ['🏃','💨','🎽','⚡','🔄'],
+  'fall系':        ['🍂','😱','💔','🎭','⬇️'],
+  'bring系':       ['📦','🎒','💡','⬆️','🔙'],
+  'go系':          ['🚀','➡️','🔄','🔛','🚪'],
+  'get系':         ['💪','🔑','😊','🎯','⬆️'],
+  'take系':        ['🤲','📸','☕','🎭','💼'],
+  'make系':        ['🛠️','💡','🤝','✅','💰'],
+  '不規則動詞':     ['📝','🔄','⚡','🎯','📖'],
+  '中学表現':       ['🏫','👋','✅','💬','⭐'],
+  '中学副詞':       ['⏰','📍','🔁','✨','🎯'],
+  '前置詞':        ['📍','⬆️','⬇️','↔️','🗺️'],
+  '接続詞':        ['🔗','↔️','🔄','⚖️','➕'],
+  'Lv1基礎':       ['🌱','👶','✨','💫','🌟'],
+  'Lv2初級':       ['🌿','📖','💡','🎯','⭐'],
+  'Lv3中級':       ['🌳','📊','💼','🔑','⚡'],
+  'Lv4上級':       ['🏔','🎓','💎','🚀','🔥'],
+  'Lv5上級':       ['🎓','👑','💎','⚡','🌟'],
+  'Phrasal Verb':  ['🔀','↪️','🔄','➡️','🎯'],
+  'Verb':          ['⚡','💥','🔄','🎯','🚀'],
+};
+var WORD_EMOJI = {
+  // 感情・状態
+  'angry':'😤','happy':'😊','sad':'😢','tired':'😴','excited':'😆',
+  'nervous':'😰','calm':'😌','afraid':'😨','surprised':'😲','confused':'😵',
+  'proud':'🥲','jealous':'😒','grateful':'🙏','disappointed':'😞',
+  'exhausted':'😫','relieved':'😮‍💨','desperate':'😣','hurt':'😢',
+  'worried':'😟','bored':'😑','lonely':'🥺','embarrassed':'😳',
+  'motivated':'💪','confident':'😎','comfortable':'😌','frustrated':'😤',
+  'overwhelmed':'😵‍💫','determined':'😤','hopeful':'🤞','curious':'🤔',
+  // 基本動詞
+  'love':'❤️','hate':'💢','enjoy':'😄','smile':'😊','cry':'😭',
+  'laugh':'😂','dance':'💃','sing':'🎵','play':'🎮','hug':'🤗',
+  'kiss':'💋','wave':'👋','point':'👈','nod':'🙆','shake':'🙅',
+  'eat':'🍽️','drink':'🥤','cook':'👨‍🍳','sleep':'😴','wake up':'⏰',
+  'run':'🏃','walk':'🚶','jump':'🦘','swim':'🏊','fly':'✈️',
+  'drive':'🚗','ride':'🚴','climb':'🧗','fall':'💫','sit down':'🪑',
+  'stand up':'🧍','lie down':'🛌','carry':'📦','lift':'🏋️','throw':'⚾',
+  'catch':'🙌','kick':'⚽','push':'🤜','pull':'🤛','hit':'💥',
+  'write':'✍️','read':'📖','draw':'🎨','cut':'✂️','fix':'🔧',
+  'build':'🏗️','break':'💥','clean':'🧹','wash':'🫧','pack':'🧳',
+  'buy':'🛍️','sell':'💰','pay':'💳','save':'🪙','spend':'💸',
+  'send':'📨','receive':'📬','give':'🎁','find':'🔍','lose':'😱',
+  'win':'🏆','fail':'❌','succeed':'✅','achieve':'🏅','improve':'📈',
+  // 句動詞
+  'bounce':'⚽','spin':'🌀','float':'🎈','expand':'💥','orbit':'🌍',
+  'roll':'🎱','scatter':'💨','gather':'🫂','emerge':'✨',
+  'sink':'⚓','dive':'🤿','swing':'🎡','surround':'🔄','chase':'🐱',
+  'escape':'🏃‍💨','block':'🛡️','zigzag':'〰️','peek':'👀',
+  'grow up':'🌱','fall down':'💫','run away':'🏃','break down':'💥',
+  'come across':'😮','come out':'🚪','come over':'🏃','come up with':'💡',
+  'look into':'🔍','look out':'⚠️','look back':'↩️','look forward to':'🤩',
+  'turn into':'🦋','turn down':'❌','turn out':'😮','turn back':'↩️',
+  'break into':'🔓','break out':'💥','break up':'💔','break through':'🚀',
+  'call off':'🚫','call back':'📞','call out':'📣',
+  'give away':'🎁','give back':'🔙','give in':'🏳️',
+  'hold back':'✋','hold on':'⏸️','hold out':'🤲',
+  'run into':'😮','run through':'⚡','run out':'😰',
+  'fall apart':'💔','fall behind':'🐢','fall for':'💕','fall out':'💔',
+  'bring about':'💡','bring back':'🔙','bring down':'⬇️',
+  'go on':'▶️','go off':'🔔','go out':'🚪','go over':'✅',
+  'go back':'↩️','go viral':'📱','go wrong':'❌','go blank':'😶',
+  'get up':'⏰','get out':'🚪','get back':'🔙','get together':'🎉',
+  'get along':'🤝','get away':'🏖️','get ahead':'🏆','get into':'🎯',
+  'get married':'💍','get excited':'🎉','get tired':'😴','get angry':'😤',
+  'get promoted':'⬆️','get fired':'😱','get started':'🚀','get better':'💊',
+  'take off':'✈️','take over':'👑','take care of':'🤗','take a break':'☕',
+  'take a walk':'🚶','take a photo':'📸','take action':'⚡',
+  'make sense':'💡','make friends':'🤝','make progress':'📈',
+  'make a mistake':'❌','make money':'💰','make a difference':'✨',
+  'make a reservation':'📅','make a plan':'📋','make a decision':'⚖️',
+  'stand up':'🧍','stand out':'⭐','step up':'⬆️','step back':'↩️',
+  'open up':'💬','slow down':'🐢','speed up':'🚀','calm down':'😌',
+  'give up':'🏳️','show up':'😮','end up':'🎯','turn out':'😮',
+  'figure out':'💡','hold on':'✋','wake up':'⏰','put off':'📅',
+  'look forward to':'🤩','catch up':'🏃','stand out':'⭐','fit in':'🤝',
+  // 副詞
+  'already':'⏰','finally':'🎉','suddenly':'💥','immediately':'⚡',
+  'quickly':'🚀','slowly':'🐢','carefully':'🧐','definitely':'✅',
+  'absolutely':'💯','probably':'🤔','maybe':'❓','perhaps':'🤷',
+  'always':'🔄','never':'🚫','often':'🔁','usually':'📅','sometimes':'🎲',
+  'together':'🤝','everywhere':'🌍','forward':'➡️','away':'🏃',
+  'soon':'⏳','once':'1️⃣','twice':'2️⃣','yesterday':'📅','tomorrow':'🔮',
+  'here':'📍','there':'👉','again':'🔄','also':'➕','apart':'↔️',
+  'early':'🌅','late':'🌙','hard':'💪','well':'👍','back':'↩️',
+  'barely':'😰','hardly':'😤','mostly':'〜','entirely':'💯',
+  'luckily':'🍀','unfortunately':'😔','honestly':'🤞','seriously':'😐',
+  'deeply':'💙','clearly':'💎','directly':'➡️','exactly':'🎯',
+  // 会話・慣用表現
+  'burn out':'🔥','fired up':'🔥','blown away':'🤯','on a roll':'🎲',
+  'level up':'⬆️','kick off':'🚀','wrap up':'✅','time flies':'⏰',
+  'hit the road':'✈️','break the ice':'🧊','piece of cake':'🍰',
+  'no-brainer':'💡','take the plunge':'🏊','hang in there':'💪',
+  'on the same page':'📖','touch base':'📞','cut to the chase':'✂️',
+  'out of the loop':'❓','in the loop':'🔄','over the moon':'🌙',
+  'down in the dumps':'😔','on top of the world':'🌍','at a loss':'🤷',
+  'hit a wall':'🧱','come a long way':'🏆','get the hang of':'💡',
+  'uphill battle':'⛰️','back to square one':'🔄','long shot':'🎯',
+  'pull off':'🎉','step back':'🧘','go the extra mile':'🏃',
+  'speak your mind':'💬','keep chin up':'💪',
+  // テーマ別
+  'book':'📅','check in':'🏨','check out':'🧳','depart':'✈️','arrive':'🛬',
+  'board':'✈️','land':'🛬','transit':'🔄','navigate':'🗺️',
+  'wander':'🚶','explore':'🔍','delayed':'⏰','scenic':'🌄',
+  'order':'📋','taste':'😋','spicy':'🌶️','mild':'😊','fresh':'🌿',
+  'rich':'🍮','greasy':'🍟','crispy':'🥐','tender':'🥩','sour':'🍋',
+  'grab':'🤌','starving':'🤤','delicious':'😋','savory':'🍴',
+  'recover':'💊','heal':'🩹','dizzy':'😵','nauseous':'🤢',
+  'swollen':'🦵','itch':'😖','prescribe':'💊','diagnose':'🩺',
+  'hydrate':'💧','tense':'😬','sore':'😣','exhausted':'😫','drained':'🪫',
+  'productive':'✅','proactive':'🚀','thorough':'🔍','swamped':'😵',
+  'overwhelmed':'😵‍💫','multitask':'🤹','follow up':'📨','deadline':'⏰',
+  'drift apart':'💔','bond with':'🤝','forgive':'🙏','resent':'😒',
+  'toxic':'☠️','genuine':'💎','empathize':'🤗','misunderstand':'❓',
+  'grasp':'💡','retain':'🧠','fluent':'🗣️','stuck':'🪨','click':'💡',
+  'immerse':'🌊','review':'📖','consistent':'🔄','motivated':'🔥',
+  'crash':'💥','freeze':'🥶','glitch':'⚙️','sync':'🔄','scroll':'📱',
+  'stream':'📺','digital':'💻','offline':'📵','launch':'🚀',
+  'afford':'💰','splurge':'💸','save up':'🪙','overpriced':'💸',
+  'bargain':'🏷️','invest':'📈','donate':'❤️','tight on money':'😬',
+  // 形容詞
+  'big':'🐘','small':'🐜','huge':'🌋','tiny':'🔬','tall':'🏙️',
+  'short':'📏','wide':'🛣️','narrow':'🚪','far':'🌏','close':'📍',
+  'deep':'🌊','shallow':'🏖️','fast':'🚀','slow':'🐢','quick':'⚡',
+  'heavy':'🏋️','light':'🪶','hard':'🪨','soft':'🧸','strong':'💪',
+  'weak':'😿','tight':'🤏','sharp':'🔪','busy':'😰','free':'🦅',
+  'nice':'😊','warm':'🌞','cold':'🥶','hot':'🔥','hungry':'🍽️',
+  'thirsty':'💧','afraid':'😨','alone':'🚶','alive':'💓','polite':'🎩',
+  'honest':'🤞','smart':'🧠','popular':'⭐','special':'✨','perfect':'💯',
+  'sweet':'🍭','funny':'😂','healthy':'💚','natural':'🌿',
+  'positive':'☀️','negative':'🌧️','new':'✨','old':'📜','young':'👶',
+  'beautiful':'🌸','wonderful':'🌟','powerful':'⚡','helpful':'🤝',
+  'boring':'😑','interesting':'🤩','useful':'🔧','useless':'🗑️',
+  'annoying':'😤','amazing':'🤯','awful':'💀','brilliant':'💡',
+  'urgent':'🚨','flexible':'🤸','reliable':'🛡️','determined':'😤',
+  'significant':'📊','consistent':'🔄','efficient':'⚡','effective':'🎯',
+  'crucial':'⚠️','complex':'🧩','challenging':'⛰️','outstanding':'🏆',
+  'obvious':'💡','correct':'✅','cheap':'🏷️','foreign':'🌍','cute':'🥰',
+  'delicious':'😋','glad':'😊','lucky':'🍀','favorite':'❤️','perfect':'💯',
+  // 前置詞
+  'above':'⬆️','below':'⬇️','behind':'👁️','beside':'↔️',
+  'in front of':'👁️','inside':'📦','outside':'🚪','along':'➡️',
+  'toward':'🎯','against':'🛡️','across':'↔️','beyond':'🌌',
+  'in':'📦','on':'⬆️','at':'📍','through':'🔄','between':'↔️',
+  // 接続詞・表現
+  'because':'🔗','if':'🤔','when':'⏰','while':'🔄','until':'⏳',
+  'although':'⚖️','however':'🔄','unless':'🚫','despite':'💪',
+  'be able to':'💪','have to':'😤','be good at':'⭐','be proud of':'🏆',
+  'be famous for':'🌟','look like':'👥','kind of':'〜','a lot':'📊',
+  'no problem':'👍','of course':'✅','i see':'💡','me too':'🤝',
+  'good luck':'🍀','well done':'🎉','have fun':'🎉',
+  // 中学必須
+  'cute':'🥰','kind':'🤗','warm':'🌞','cold':'🥶','hot':'🔥',
+  'beautiful':'🌸','wonderful':'🌟','delicious':'😋','funny':'😂',
+};
+
+function getEmoji(word, cat) {
+  var w = word.toLowerCase();
+  if (WORD_EMOJI[w]) return WORD_EMOJI[w];
+  var arr = EMOJI_MAP[cat];
+  if (arr) return arr[Math.floor(Math.random() * arr.length)];
+  return null;
+}
+
+function getEmojiAnim(cat, word) {
+  var w = word.toLowerCase();
+  var emotionWords = ['angry','happy','sad','tired','excited','nervous','afraid','surprised','confused','love','hate'];
+  if (emotionWords.includes(w)) return 'emoji-pulse';
+  if (cat.includes('旅行') || w.includes('fly') || w.includes('travel')) return 'emoji-float';
+  if (cat.includes('健康') || w.includes('dizzy') || w.includes('spin')) return 'emoji-spin2';
+  if (cat.includes('仕事') || cat.includes('中級') || cat.includes('上級')) return 'emoji-float';
+  if (w.includes('fall') || w.includes('sink') || w.includes('down')) return 'emoji-fall2';
+  if (w.includes('rise') || w.includes('grow') || w.includes('up')) return 'emoji-rise2';
+  if (w.includes('run') || w.includes('rush') || w.includes('quick')) return 'emoji-rush';
+  if (w.includes('bounce') || w.includes('jump') || w.includes('excited')) return 'emoji-bounce2';
+  if (w.includes('swing') || w.includes('wave') || w.includes('shake')) return 'emoji-shake2';
+  return 'emoji-float';
+}
+
+  // ── DECKS ──
 var DECKS = [
   {id:'all',name:'全単語',emoji:'📚',desc:W.length+'語 すべて',ids:'all'},
   {id:'preposition',name:'前置詞コア',emoji:'📍',desc:'in / on / at / through / between',ids:['in','on','at','through','between']},
@@ -1907,6 +2137,26 @@ function render(){
   $('een').textContent = d.en;
   $('eja').textContent = d.ja;
   $('cn').textContent = (idx+1) + ' / ' + currentWords.length;
+  // 絵文字シェイプ
+  var em = getEmoji(d.w, d.c);
+  var es = $('emojiShape');
+  if(em){
+    es.textContent = em;
+    var anim = getEmojiAnim(d.c, d.w);
+    es.className = 'emoji-shape show ' + anim;
+    // rush系は左から流れるので位置を変える
+    if(anim === 'emoji-rush'){
+      es.style.left = '-10%'; es.style.bottom = '55px';
+    } else if(anim === 'emoji-rise2'){
+      es.style.left = '40%'; es.style.bottom = '20px';
+    } else if(anim === 'emoji-fall2'){
+      es.style.left = '40%'; es.style.bottom = '100px';
+    } else {
+      es.style.left = '38%'; es.style.bottom = '55px';
+    }
+  } else {
+    es.className = 'emoji-shape';
+  }
   rev = false;
   $('mn').classList.add('hid');
   $('ex').classList.remove('vis');
